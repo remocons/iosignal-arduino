@@ -1,0 +1,194 @@
+/*
+ *  IOSignal Example. 
+ *  SparkFun ESP8266 Thing - Dev Board + Button
+ *  You can use general ESP8266 board too.
+ *
+ *  Lee Dongeun <sixgen@gmail.com>
+ *  https://github.com/remocons/iosignal-arduino
+ *
+ *  MIT License
+ */
+
+
+#include <Arduino.h>
+#include <ESP8266WiFiMulti.h>
+#include <IOSignal.h>
+
+#define TCP_PORT 55488
+const char* ssid = "WIFI_SSID";
+const char* pass = "WIFI_PASS";
+const char *server = "io.remocon.kr"; 
+
+ESP8266WiFiMulti wifiMulti;
+WiFiClient client;
+IOSignal io;
+const char *name = "SFE-thing-dev:home";
+const char *ui = "on,off,toggle";
+
+const int buttonPin = 2;
+int lastButtonState = HIGH; 
+
+void deviceOn(){
+  digitalWrite(LED_BUILTIN, LOW); // Low means ON
+  io.signal("@$state", "on" );
+}
+
+void deviceOff(){
+  digitalWrite(LED_BUILTIN, HIGH);
+  io.signal("@$state", "off" );
+}
+
+void deviceToggle(){
+  int nextState = !digitalRead(LED_BUILTIN);
+  digitalWrite(LED_BUILTIN, nextState);
+   if( nextState){
+    io.signal("@$state", "off" );
+   }else{
+    io.signal("@$state", "on" );
+   }
+}
+
+int isPressed(){
+  int currentState = digitalRead(buttonPin);
+  if(lastButtonState == HIGH && currentState == LOW){
+    lastButtonState = LOW;
+    return 1;
+  } 
+  else{
+    lastButtonState = currentState;
+    return 0;
+  } 
+}
+
+void setup() {
+  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  WiFi.mode(WIFI_STA);
+  wifiMulti.addAP(ssid, pass);
+  // wifiMulti.addAP("SECOND_SSID", "AP_KEY");  
+  // You can register multiple APs.
+
+  Serial.begin(115200);
+  io.setRxBuffer( 200 );
+
+  // device authentication.
+  // type1. If you have a deviceId and a deviceKey.
+  // io.auth( "deviceId", "deviceKey" );
+
+  // type2. If you have one id_key string.
+  // io.auth( "id_key" );
+  
+  io.setClient( &client );
+  io.onReady( &onReadyHandler );
+  io.onMessage( &onMessageHandler );
+
+}
+
+
+void loop() {
+  
+    if( client.connected() ){
+
+      uint8_t conditionCode = io.update();
+      if(conditionCode != 0 ){ 
+          // some warning or error. 
+          // Serial.print("E");
+          // Serial.println( conditionCode);
+        if(conditionCode >= 250){
+          // big issue.
+          Serial.println(F("disconnect!"));
+          client.stop();
+        }          
+      } 
+      
+
+      if(isPressed()){
+        Serial.println(F("pressed"));
+
+      // type 1. Multicasting to a public channel
+        // io.signal("public_button", "click" );  // simple channel
+        // io.signal("public#button", "click" );  // Separate channel names and a topic with # marks.
+
+      // type 2. Multicasting to a Private HOME_CHANNEL 
+      // Omitting the channel name allows devices with the same global IP address to communicate.
+        // io.signal("#button", "click" );  // Omit the channel name and separate it from the topic with a # marker.
+        io.signal("#screen", "next" );
+
+      // type 3. To make a uni-cast transmission, you need to know the CID of the recipient.
+        // io.signal("cid@", "click" );   // Follow the recipient's CID with the @ character.
+        // io.signal("cid@button", "click" ); // You can add a topic after the @.
+      }
+    
+    } else if( WiFi.status() != WL_CONNECTED ){ 
+
+      if( wifiMulti.run() == WL_CONNECTED ){
+        Serial.println("WiFi connected.");
+      }else{
+        Serial.print("w");
+        delay(2000); 
+      }
+
+    }else{ 
+      io.clear();
+      delay(2000); 
+      if(client.connect( server , TCP_PORT) ){
+        Serial.println("Server connected.");
+      }else{
+        Serial.print("s");
+      }
+    }
+
+}
+
+
+
+
+void onReadyHandler()
+{
+  Serial.print("onReady cid: ");
+  Serial.println( io.cid );
+  io.signal("@$state", "off" );
+  io.signal("@$ui", ui );
+  io.signal("@$name", name );
+  io.signal("#notify", io.cid );
+  io.subscribe("#search");
+  
+}
+
+void onMessageHandler( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
+{
+
+  // signal message info
+  Serial.print(">> signal tag: " );
+  Serial.print( tag );
+  Serial.print(" type: " );
+  Serial.print( payloadType );
+  Serial.print(" size: " );
+  Serial.println( payloadSize );
+
+  if( payloadType == IOSignal::PAYLOAD_TYPE::TEXT ){  
+    Serial.print("string payload: " );
+    Serial.println( (char *)payload  );
+  }
+
+  if( strcmp(tag, "#search") == 0){
+    io.signal( "#notify", io.cid );
+  }
+
+  if( strcmp(tag, "@ui") == 0){
+    io.signal2( (char *)payload, "@ui", io.cid , ui );
+  }
+      
+  if( strcmp(tag, "@") == 0){
+    if( strcmp((char *)payload, "on") == 0){
+      deviceOn();
+    }else if( strcmp((char *)payload, "off") == 0){
+      deviceOff();
+    }else if( strcmp((char *)payload, "toggle") == 0){
+      deviceToggle();
+    }
+  }
+      
+}
