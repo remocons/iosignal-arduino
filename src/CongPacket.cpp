@@ -75,7 +75,7 @@ void CongPacket::fill_body()
   size_t available = client->available();
   if(available ==  0) return;
 
-  size_t need =_payloadLength - _bufferIndex ;
+  size_t need =_payloadLength - _bufferIndex;
     if( need > available ){ 
       need = available;  
     }

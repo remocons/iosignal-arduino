@@ -13,14 +13,22 @@ IOSignal::IOSignal()
 }
 
 
-// return code: 
-// 0: okay  
-// 1: mem_alloc error 
-// 2: decryption error
-// 250~ : packet error
+// return code: 0 == normal
 uint8_t IOSignal::update()
 {
   refreshTime();
+
+  if( !this->client->connected()){
+      clear();
+      delay(3000); 
+      if(this->client->connect( _host , _port) ){
+        // Serial.println(F("Server connected."));
+        return 0;
+      }else{
+        // Serial.print(F("s"));
+        return 3;
+      }
+  }
 
   if ((getUnixTime() - lastTxRxTime) > pingPeriod)
   {
@@ -29,11 +37,12 @@ uint8_t IOSignal::update()
   }
 
   cong.run();
-
   if(cong._state >= 250){
     close( cong._state);
+    this->client->stop();
     return cong._state;
   } 
+  
   if (!cong.ready()) return 0; 
 
   lastTxRxTime = getUnixTime();
@@ -44,7 +53,6 @@ uint8_t IOSignal::update()
 
   if (message[0] == Boho::MsgType::ENC_488)
   {
-// Serial.println(F(">> E"));
 #ifdef USE_PSRAM
     tmpbuf = (uint8_t *)ps_malloc(len);
 #else
@@ -203,19 +211,7 @@ uint8_t IOSignal::update()
       sprintf(ipString,  "%d.%d.%d.%d\0", message[1], message[2], message[3], message[4]);
       uint16_t port = (message[5] << 8 ) + message[6];
       
-      // Serial.println("redirection");
-      // boho_print_hex("ip hex:", message + 1, 4 );
-      // Serial.print( "host: ");
-      // Serial.print(ipString);
-      // Serial.print( " port: ");
-      // Serial.println( port);
-
-      if( this->client->connect( ipString , port ) ){
-        Serial.println( "redirection connected");
-      }else{
-        Serial.println( "redirection faild");
-      }
-
+      this->client->connect( ipString , port );
       if (tmpbuf != NULL) free(tmpbuf);
       return IOSignal::MsgType::SERVER_REDIRECT;
 
@@ -265,19 +261,18 @@ uint8_t IOSignal::update()
 }
 
 
-
-
-void IOSignal::setClient(Client *client)
+void IOSignal::begin(Client *client, const char *_host, uint16_t _port )
 {
   this->client = client;
   cong.init(client);
+  this->_host = _host;
+  this->_port = _port;
 }
 
 
 void IOSignal::setRxBuffer(size_t size)
 {
   // Serial.println(F("-- setRxBuffer: "));
-
 #ifdef USE_PSRAM
   uint8_t *buf = (uint8_t *)ps_malloc(size);
 #else
@@ -289,13 +284,8 @@ void IOSignal::setRxBuffer(size_t size)
     // Serial.println(F("\n-- NO RX_BUFFER!"));
     return;
   }
-
   cong.setBufferSize(buf, size);
 }
-
-
-
-
 
 void IOSignal::write(const uint8_t *buffer, uint32_t size)
 {
@@ -606,7 +596,7 @@ void IOSignal::signal(const char *tag, const uint8_t *data, uint32_t dataLen)
   buf[1] = tagLen; //  ch str len
   strcpy((char *)buf + 2, tag);
   buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::BINARY;
-  ;
+ 
 
   memcpy(buf + 3 + tagLen, data, dataLen);
   send_enc_mode(buf, (3 + tagLen + dataLen));

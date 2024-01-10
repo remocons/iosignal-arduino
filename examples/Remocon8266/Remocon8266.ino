@@ -1,7 +1,7 @@
 /*
  *  IOSignal Example. 
  *  Remocon8266 board
-
+ 
  *  Lee Dongeun <sixgen@gmail.com>
  *  https://github.com/remocons/iosignal-arduino
  *
@@ -29,12 +29,15 @@
 #define OUT1       15   // D8  LED, NeoPixel, Servo or else.
 #define OUT2       12   // D6 
 
-#define TCP_PORT 55488
-const char *server = "io.remocon.kr"; 
-
 ESP8266WiFiMulti wifiMulti;
 WiFiClient client;
 IOSignal io;
+
+const char *name = "Remocon8266:HOME";
+const char *ui = "L,A,B";
+char states[] = "100";
+char last_states[] = "100";
+uint8_t pinMap[] = { LED_BUILTIN , OUT1, OUT2 };
 
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/U8X8_PIN_NONE);
 
@@ -43,14 +46,6 @@ Bounce2::Button upBtn = Bounce2::Button();
 Bounce2::Button leftBtn = Bounce2::Button();
 Bounce2::Button downBtn = Bounce2::Button();
 Bounce2::Button rightBtn = Bounce2::Button();
-
-
-const char *name = "Remocon8266:HOME";
-const char *ui = "L,A,B";
-char states[] = "100";
-char last_states[] = "100";
-uint8_t pinMap[] = { LED_BUILTIN , OUT1, OUT2 };
-
 
 void stateChange(int i){
   //local state
@@ -141,13 +136,13 @@ void draw_logo() {
 }
 
 void setup() {
-  Serial.begin(115200);
-  Serial.flush();
 
-  WiFi.mode(WIFI_STA);
-  wifiMulti.addAP( "WIFI_SSID", "WIFI_PASS");
-  // wifiMulti.addAP( "twesomego", "qwer1234");  
-  // You can add multiple APs.
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);  // active low 
+  pinMode(OUT1, OUTPUT);
+  digitalWrite(OUT1, LOW); 
+  pinMode(OUT2, OUTPUT);
+  digitalWrite(OUT2, LOW); 
 
   upBtn.attach(BTN_UP, INPUT); // external pullup
   upBtn.interval(5);           
@@ -165,16 +160,8 @@ void setup() {
   rightBtn.interval(5);           
   rightBtn.setPressedState(LOW);  
 
-
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);  // active low 
-
-  pinMode(OUT1, OUTPUT);
-  digitalWrite(OUT1, LOW); 
-
-  pinMode(OUT2, OUTPUT);
-  digitalWrite(OUT2, LOW); 
-
+  Serial.begin(115200);
+  Serial.flush();
 
   u8g2.begin();
   u8g2_prepare();
@@ -195,65 +182,51 @@ void setup() {
   u8g2.clearBuffer(); 
     u8g2.drawStr(0, 20, "Connecting..");
     u8g2.sendBuffer();
+  
+  WiFi.mode(WIFI_STA);
+  wifiMulti.addAP( "WIFI_SSID", "WIFI_PASS");
+  wifiMulti.addAP( "twesomego", "qwer1234");  
+  // You can add multiple APs.  
+  Serial.println();
+  Serial.println();
+  Serial.print("Wait for WiFi... ");
+  while (wifiMulti.run() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(500);
 
   io.setRxBuffer( 200 );
-
-  // IOSignal Authenticaton. 
+  io.begin( &client , "io.remocon.kr", 55488);
+  io.onReady( &onReady );
+  io.onMessage( &onMessage );
   // io.auth( "ID_KEY" ); 
-  
-  
-  io.setClient( &client );
-  io.onReady( &onReadyHandler );
-  io.onMessage( &onMessageHandler );
 
 }
 
   
 void loop() {
 
-    if( client.connected() ){
+    uint8_t conditionCode = io.update();
+    if(conditionCode != 0 ){ 
+      Serial.print("C");
+      Serial.println( conditionCode );
+        return;
+    } 
 
-      uint8_t state = io.update();
-      if(state != 0 ){ 
-          // some warning or error. 
-           Serial.print("E");
-           Serial.println( state);
-        if(state >= 250){
-          // big issue.
-          Serial.println(F("disconnect!"));
-          client.stop();
-        }          
-      } 
-      
-      check_events();
-      handle_events();
-
-
-    } else if( WiFi.status() != WL_CONNECTED ){ 
-      // Serial.println("WiFi disconnected.");
-      if( wifiMulti.run() == WL_CONNECTED ){
-        Serial.println("WiFi connected.");
-      }else{
-        Serial.print("w");
-        delay(2000); 
-      }
-
-    }else{ 
-      delay(2000); 
-      io.clear();
-      if(client.connect( server , TCP_PORT) ){
-        Serial.println("Server connected.");
-      }else{
-        Serial.print("s");
-      }
-    }
-
+    check_events();
+    handle_events();
+    
 }
 
 
 
 
-void onReadyHandler()
+void onReady()
 {
   Serial.print("onReady cid: ");
   Serial.println( io.cid );
@@ -267,13 +240,13 @@ void onReadyHandler()
     u8g2.setCursor(0, 0);
     u8g2.print("Ready CID: ");
     u8g2.print(io.cid);
-    u8g2.drawStr(0, 15, "web app url:");
+    u8g2.drawStr(0, 15, "remote control:");
     u8g2.drawStr(0, 30, "https://remocon.kr");
-    u8g2.drawStr(0, 45, "io control");
+    u8g2.drawStr(0, 45, "IOSignal IoT");
     u8g2.sendBuffer();
 }
 
-void onMessageHandler( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
+void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
 {
 
   // signal message info

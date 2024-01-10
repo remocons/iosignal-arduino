@@ -121,7 +121,7 @@ public:
 
   uint8_t update();
 
-  void setClient(Client *client);
+  void begin(Client *client, const char *_host, uint16_t _port);
   void setRxBuffer(size_t size);
   void write(const uint8_t *buffer, uint32_t size);
 
@@ -159,7 +159,6 @@ public:
 
 
   uint8_t _buffer[DEFAULT_TX_BUF_SIZE];
-  Client *client;
 
   union u32buf4 packetLength;
 
@@ -170,8 +169,9 @@ public:
 
   uint8_t encMode = IOSignal::ENC_MODE::AUTO;
 
-  // uint8_t server[4] = {192,168,0,101};
-  // uint16_t port = 55557L;
+  Client *client;
+  const char *_host;
+  uint16_t _port = 55488L;
 private:
   void (*messageCallback)(char *, uint8_t, uint8_t *, size_t);
   void (*readyCallback)(void);

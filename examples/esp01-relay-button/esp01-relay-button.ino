@@ -1,5 +1,5 @@
 /*
- *   esp01-relay-button Example. 
+ *  esp01-relay-button Example. 
  *
  *  Lee Dongeun <sixgen@gmail.com>
  *  https://github.com/remocons/remocon-arduino
@@ -7,13 +7,9 @@
  *  MIT License
  */
 
-
 #include <ESP8266WiFiMulti.h>
 #include <IOSignal.h>
 #include <Bounce2.h>
-
-#define TCP_PORT 55488
-const char *server = "io.remocon.kr"; 
 
 ESP8266WiFiMulti wifiMulti;
 WiFiClient client;
@@ -52,82 +48,55 @@ void toggle(int i){
 }
 
 
-void setup() {
-
-  WiFi.mode(WIFI_STA);
-  wifiMulti.addAP( "WIFI_SSID", "WIFI_PASS");
-  // wifiMulti.addAP( "twesomego", "qwer1234");  
-  // You can add multiple APs.
-  
+void setup() {  
   pinMode(0, OUTPUT);
-  digitalWrite(0, HIGH);  //
+  digitalWrite(0, HIGH);
 
   pinMode(1, OUTPUT);
   digitalWrite(1, HIGH);  // active low
 
-  // You can't use Serial-tx and built-in LED toghther.
+  // NOTICE. ESP01. 
+  // You can't use Serial-tx and built-in LED together.
   // Serial.begin(115200);
   
   aBtn.attach( 2, INPUT_PULLUP ); 
   aBtn.interval(5); // debounce interval in milliseconds
   aBtn.setPressedState(LOW); 
   
-  io.setClient( &client );
+  WiFi.mode(WIFI_STA);
+  wifiMulti.addAP( "WIFI_SSID", "WIFI_PASS");
+  wifiMulti.addAP( "twesomego", "qwer1234");  
+  // You can add multiple APs.  
+
+  while (wifiMulti.run() != WL_CONNECTED) {
+    delay(500);
+  }
+  delay(500);
+
   io.setRxBuffer( 200 );
-  io.onReady( &onReadyHandler );
-  io.onMessage( &onMessageHandler );
+  io.begin( &client , "io.remocon.kr", 55488);
+  io.onReady( &onReady );
+  io.onMessage( &onMessage );
+  // io.auth( "ID_KEY" ); 
 
 }
 
 
 void loop() {
-
-
-    if( client.connected() ){
-
-      uint8_t conditionCode = io.update();
-      if(conditionCode != 0 ){ 
-          // some warning or error. 
-          //  Serial.print("E");
-          //  Serial.println( conditionCode);
-        if(conditionCode >= 250){
-          // Serial.println( "disconnect!" );
-          client.stop();
-        }          
-      } else{
-        aBtn.update();
-        if ( aBtn.pressed() ) {
-          toggle(0);
-          delay(100);
-        }  
-      }
-
-    } else if( WiFi.status() != WL_CONNECTED ){ 
-      // Serial.println("WiFi disconnected.");
-
-      if( wifiMulti.run() == WL_CONNECTED ){
-        // Serial.println("WiFi connected.");
-      }else{
-        // Serial.print("w");
-        delay(2000); 
-      }
-
-    }else{ 
-      io.clear();
-      delay(2000); 
-      if(client.connect( server , TCP_PORT) ){
-        // Serial.println("Server connected.");
-      }else{
-        // Serial.print("s");
-      }
+    uint8_t conditionCode = io.update();
+    if(conditionCode == 0 ){       
+      aBtn.update();
+      if ( aBtn.pressed() ) {
+        toggle(0);
+        delay(100);
+      }  
     }
-
 }
 
 
 
 
-void onReadyHandler()
+void onReady()
 {
   // Serial.print("onReady cid: ");
   // Serial.println( io.cid );
@@ -139,9 +108,8 @@ void onReadyHandler()
   
 }
 
-void onMessageHandler( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
+void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
 {
-
 
   if( strcmp(tag, "#search") == 0){
     io.signal( "#notify", io.cid );

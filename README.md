@@ -1,6 +1,6 @@
 # IOSignal Arduino Client
 
-This library provides a client for doing signaling(messaging) with a server that supports [`IOSignal`](https://github.com/remocons/iosignal).
+Arduino Client for [`IOSignal`](https://github.com/remocons/iosignal).
 
 ## Examples
 

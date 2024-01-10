@@ -13,7 +13,6 @@
 
 
 #include <Arduino.h>
-
 #define IR_INPUT_PIN 3 // do not use 4,10,11,12(sd,spi)
 #define NO_LED_FEEDBACK_CODE
 #include "TinyIRReceiver.hpp" 
@@ -24,12 +23,8 @@
 
 volatile struct TinyIRReceiverCallbackDataStruct sCallbackData;
 
-#define TCP_PORT 55488
-const char *server = "io.remocon.kr";
-
 // If you have multiple devices, you'll need to change the MAC address.
 byte mac[]{0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0x06};
-// IPAddress ip(192, 168, 1, 3);
 EthernetClient client;
 IOSignal io;
 const char *name = "UnoR3-Eth-IR:HOME";
@@ -37,37 +32,26 @@ const char *ui = "on,off,toggle";
 
 void setup()
 {
-
-  Serial.begin(115200);
-
-  initPCIInterruptForTinyReceiver();
-
-  Serial.println(F("Init.."));
-  Ethernet.init(10);
-
-  Ethernet.begin(mac); // DHCP
-  // Ethernet.begin(mac , ip); //static IP
-
-  Serial.print(F("IP:"));
-  Serial.println(Ethernet.localIP());
-
-  io.setRxBuffer(80);
-  io.setClient(&client);
-
-  // device authentication.
-  // type1. If you have a deviceId and a deviceKey.
-  // io.auth( "deviceId", "deviceKey" );
-
-  // type2. If you have one id_key string.
-  // io.auth( "id_key" );
-  
-  io.onReady(&onReadyHandler);
-  io.onMessage(&onMessageHandler);
-
   pinMode(5, OUTPUT); // LED
   pinMode(6, OUTPUT); // Relay
   digitalWrite(5, LOW);
   digitalWrite(6, LOW);
+
+  Serial.begin(115200);
+  initPCIInterruptForTinyReceiver();
+
+  Ethernet.init(10);
+  Ethernet.begin(mac); // DHCP
+  Serial.println(F("Init.."));
+  Serial.print(F("IP:"));
+  Serial.println(Ethernet.localIP());
+
+  io.setRxBuffer(80);
+  io.begin(&client, "io.remocon.kr", 55488 );
+  io.onReady(&onReady);
+  io.onMessage(&onMessage);
+  // io.auth( "id_key" );
+
 }
 
 void deviceOn()
@@ -101,8 +85,13 @@ void deviceToggle()
 
 void loop()
 {
-  if (client.connected())
-  {
+  
+    uint8_t conditionCode = io.update();
+    if(conditionCode != 0 ){ 
+        Serial.print("C");
+        Serial.println( conditionCode);
+        return;
+    } 
 
     if (sCallbackData.justWritten)
     {
@@ -149,35 +138,9 @@ void loop()
       }
     }
 
-    uint8_t conditionCode = io.update();
-    if(conditionCode != 0 ){ 
-        // some warning or error. 
-        // Serial.print("E");
-        // Serial.println( conditionCode);
-      if(conditionCode >= 250){
-        // big issue.
-        Serial.println(F("disconnect!"));
-        client.stop();
-      }          
-    } 
-  }
-  else
-  {
-    io.clear();
-    delay(3000);
-    // trying connect to server.
-    if (client.connect(server, TCP_PORT))
-    {
-      Serial.println(F("Server connected."));
-    }
-    else
-    {
-      Serial.print(F("s"));
-    }
-  }
 }
 
-void onReadyHandler()
+void onReady()
 {
   Serial.print(F("onReady cid: "));
   Serial.println(io.cid);
@@ -188,7 +151,7 @@ void onReadyHandler()
   io.subscribe("#search");
 }
 
-void onMessageHandler(char *tag, uint8_t payloadType, uint8_t *payload, size_t payloadSize)
+void onMessage(char *tag, uint8_t payloadType, uint8_t *payload, size_t payloadSize)
 {
   // signal message info
   Serial.print(F(">> signal tag: "));

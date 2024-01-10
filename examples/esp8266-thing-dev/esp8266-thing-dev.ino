@@ -13,12 +13,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFiMulti.h>
 #include <IOSignal.h>
-
-#define TCP_PORT 55488
-const char* ssid = "WIFI_SSID";
-const char* pass = "WIFI_PASS";
-const char *server = "io.remocon.kr"; 
-
+ 
 ESP8266WiFiMulti wifiMulti;
 WiFiClient client;
 IOSignal io;
@@ -65,87 +60,66 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
-  WiFi.mode(WIFI_STA);
-  wifiMulti.addAP(ssid, pass);
-  // wifiMulti.addAP("SECOND_SSID", "AP_KEY");  
-  // You can register multiple APs.
-
   Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  wifiMulti.addAP( "WIFI_SSID", "WIFI_PASS");
+  wifiMulti.addAP( "twesomego", "qwer1234");  
+  // You can add multiple APs.  
+  Serial.println();
+  Serial.println();
+  Serial.print("Wait for WiFi... ");
+  while (wifiMulti.run() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(500);
+
   io.setRxBuffer( 200 );
-
-  // device authentication.
-  // type1. If you have a deviceId and a deviceKey.
-  // io.auth( "deviceId", "deviceKey" );
-
-  // type2. If you have one id_key string.
-  // io.auth( "id_key" );
-  
-  io.setClient( &client );
-  io.onReady( &onReadyHandler );
-  io.onMessage( &onMessageHandler );
+  io.begin( &client , "io.remocon.kr", 55488);
+  io.onReady( &onReady );
+  io.onMessage( &onMessage );
+  // io.auth( "ID_KEY" ); 
 
 }
 
 
 void loop() {
   
-    if( client.connected() ){
-
       uint8_t conditionCode = io.update();
       if(conditionCode != 0 ){ 
-          // some warning or error. 
-          // Serial.print("E");
-          // Serial.println( conditionCode);
-        if(conditionCode >= 250){
-          // big issue.
-          Serial.println(F("disconnect!"));
-          client.stop();
-        }          
+          Serial.print("C");
+          Serial.println( conditionCode); 
+          return;      
       } 
       
 
       if(isPressed()){
         Serial.println(F("pressed"));
 
-      // type 1. Multicasting to a public channel
+        // type 1. Multicasting to a public channel
         // io.signal("public_button", "click" );  // simple channel
         // io.signal("public#button", "click" );  // Separate channel names and a topic with # marks.
 
-      // type 2. Multicasting to a Private HOME_CHANNEL 
-      // Omitting the channel name allows devices with the same global IP address to communicate.
+        // type 2. Multicasting to a Private HOME_CHANNEL 
+        // Omitting the channel name allows devices with the same global IP address to communicate.
         // io.signal("#button", "click" );  // Omit the channel name and separate it from the topic with a # marker.
         io.signal("#screen", "next" );
 
-      // type 3. To make a uni-cast transmission, you need to know the CID of the recipient.
+        // type 3. To make a uni-cast transmission, you need to know the CID of the recipient.
         // io.signal("cid@", "click" );   // Follow the recipient's CID with the @ character.
         // io.signal("cid@button", "click" ); // You can add a topic after the @.
       }
-    
-    } else if( WiFi.status() != WL_CONNECTED ){ 
-
-      if( wifiMulti.run() == WL_CONNECTED ){
-        Serial.println("WiFi connected.");
-      }else{
-        Serial.print("w");
-        delay(2000); 
-      }
-
-    }else{ 
-      io.clear();
-      delay(2000); 
-      if(client.connect( server , TCP_PORT) ){
-        Serial.println("Server connected.");
-      }else{
-        Serial.print("s");
-      }
-    }
 
 }
 
 
 
 
-void onReadyHandler()
+void onReady()
 {
   Serial.print("onReady cid: ");
   Serial.println( io.cid );
@@ -157,7 +131,7 @@ void onReadyHandler()
   
 }
 
-void onMessageHandler( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
+void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
 {
 
   // signal message info

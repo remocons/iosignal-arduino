@@ -6,27 +6,19 @@
  *  MIT License
  */
 
-
-
 #include <ESP8266WiFiMulti.h>
 #include <IOSignal.h>
 #include <Bounce2.h>
+#define BUTTON_PIN 13 // D7
+#define BUILTIN_LED 2 // D4
 
-#define TCP_PORT 55488
-#define BUTTON_PIN 13
-// #define BUILTIN_LED 2
-
-const char *server = "io.remocon.kr"; 
-
+Bounce2::Button aBtn = Bounce2::Button();
 ESP8266WiFiMulti wifiMulti;
 WiFiClient client;
 IOSignal io;
 
-Bounce2::Button aBtn = Bounce2::Button();
-
 const char *name = "D1-mini:home";
 const char *ui = "on,off,toggle";
-
 
 void deviceOn(){
   digitalWrite(BUILTIN_LED, LOW);
@@ -49,73 +41,49 @@ void deviceToggle(){
 }
 
 
-
-
-void setup() {
-  
-  WiFi.mode(WIFI_STA);
-  wifiMulti.addAP( "WIFI_SSID", "WIFI_PASS");
-  // wifiMulti.addAP( "twesomego", "qwer1234");  
-  // You can add multiple APs.
-  
+void setup() {  
   pinMode( BUILTIN_LED , OUTPUT);
   digitalWrite( BUILTIN_LED , HIGH);  //
   
   aBtn.attach( BUTTON_PIN, INPUT_PULLUP ); 
   aBtn.interval(5); // debounce interval in milliseconds
   aBtn.setPressedState(LOW); 
-  
-  io.setClient( &client );
+
+  Serial.begin(115200);
+  WiFi.mode(WIFI_STA);
+  wifiMulti.addAP( "WIFI_SSID", "WIFI_PASS");
+  wifiMulti.addAP( "twesomego", "qwer1234");  
+  // You can add multiple APs.  
+  Serial.println();
+  Serial.println();
+  Serial.print("Wait for WiFi... ");
+  while (wifiMulti.run() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(500);
+
   io.setRxBuffer( 200 );
+  io.begin( &client , "io.remocon.kr", 55488);
   io.onReady( &onReady );
   io.onMessage( &onMessage );
-  Serial.begin(115200);
-
+  // io.auth( "ID_KEY" ); 
 }
 
 
 void loop() {
-
-    if( client.connected() ){
-      uint8_t conditionCode = io.update();
-      if(conditionCode != 0 ){ 
-        if(conditionCode >= 250){
-          client.stop();
-        }          
-      } else{
-        aBtn.update();
-        if ( aBtn.pressed() ) {
-          deviceToggle();
-          delay(100);
-        }  
-
-      }
-
-
-    } else if( WiFi.status() != WL_CONNECTED ){ 
-      Serial.println("WiFi disconnected.");
-
-      if( wifiMulti.run() == WL_CONNECTED ){
-        Serial.println("WiFi connected.");
-      }else{
-        Serial.print("w");
-        delay(2000); 
-      }
-
-    }else{ 
-      io.clear();
-      delay(2000); 
-      if(client.connect( server , TCP_PORT) ){
-        Serial.println("Server connected.");
-      }else{
-        Serial.print("s");
-      }
+    if(io.update() == 0 ){
+      aBtn.update();
+      if ( aBtn.pressed() ) {
+        deviceToggle();
+        delay(100);
+      }  
     }
-
 }
-
-
-
 
 void onReady()
 {

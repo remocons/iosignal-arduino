@@ -14,15 +14,7 @@
 #include <IOSignal.h>
 #include "Arduino_LED_Matrix.h"
 
-#define SERVER_URL "io.remocon.kr"
-#define SERVER_PORT 55488
-
 ArduinoLEDMatrix matrix;
-
-// WiFi
-const char* ssid = "WIFI_SSID";
-const char* pass = "WIFI_PASS";
-
 WiFiClient client;
 IOSignal io;
 const char *name = "UnoR4-WiFi:HOME";
@@ -72,89 +64,48 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
   
-  WiFi.begin(ssid, pass);
+  WiFi.begin("WIFI_SSID", "WIFI_PASS");
   Serial.begin(115200);
   matrix.begin();
   matrix.loadFrame(heart);
   delay(500);
 
   io.setRxBuffer( 200 );
-
-  // device authentication.
-  // type1. If you have a deviceId and a deviceKey.
-  // io.auth( "deviceId", "deviceKey" );
-
-  // type2. If you have one id_key string.
+  io.begin( &client, "io.remocon.kr", 55488 );
+  io.onReady( &onReady );
+  io.onMessage( &onMessage );
   // io.auth( "id_key" );
-
-
-  io.setClient( &client );
-  io.onReady( &onReadyHandler );
-  io.onMessage( &onMessageHandler );
 
 }
 
 
 void loop() {
   
-    if( client.connected() ){
-
-      uint8_t conditionCode = io.update();
-      if(conditionCode != 0 ){ 
-          // some warning or error. 
-          Serial.print("E");
-          Serial.println( conditionCode);
-        if(conditionCode >= 250){
-          // big issue.
-          Serial.println(F("disconnect!"));
-          client.stop();
-        }          
-      } 
-      
-
+    if(io.update() == 0 ){ 
+       
       if(isPressed()){
         Serial.println(F("pressed"));
         deviceToggle();
-      // type 1. Multicasting to a public channel
+        // type 1. Multicasting to a public channel
         // io.signal("public_button", "click" );  // simple channel
         // io.signal("public#button", "click" );  // Separate channel names and a topic with # marks.
 
-      // type 2. Multicasting to a Private HOME_CHANNEL 
-      // Omitting the channel name allows devices with the same global IP address to communicate.
+        // type 2. Multicasting to a Private HOME_CHANNEL 
+        // Omitting the channel name allows devices with the same global IP address to communicate.
         // io.signal("#button", "click" );  // Omit the channel name and separate it from the topic with a # marker.
         io.signal("#screen", "playToggle" );
         // io.signal("#screen", "next" );
 
-      // type 3. To make a uni-cast transmission, you need to know the CID of the recipient.
+        // type 3. To make a uni-cast transmission, you need to know the CID of the recipient.
         // io.signal("cid@", "click" );   // Follow the recipient's CID with the @ character.
         // io.signal("cid@button", "click" ); // You can add a topic after the @.
       }
-    
-    } else if( WiFi.status() != WL_CONNECTED ){ 
-
-      if( WiFi.begin(ssid, pass) == WL_CONNECTED ){
-        Serial.println("WiFi connected.");
-      }else{
-        Serial.print("w");
-        delay(2000); 
-      }
-
-    }else{ 
-      io.clear();
-      delay(2000); 
-      if(client.connect( SERVER_URL , SERVER_PORT) ){
-        Serial.println("Server connected.");
-      }else{
-        Serial.print("s");
-      }
-    }
+    } 
 
 }
 
 
-
-
-void onReadyHandler()
+void onReady()
 {
   Serial.print("onReady cid: ");
   Serial.println( io.cid );
@@ -166,7 +117,7 @@ void onReadyHandler()
   
 }
 
-void onMessageHandler( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
+void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
 {
 
   // signal message info
