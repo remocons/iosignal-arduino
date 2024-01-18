@@ -13,7 +13,7 @@ IOSignal	KEYWORD1
 # IOSignal
 #######################################
 
-update	KEYWORD2
+loop	KEYWORD2
 begin	KEYWORD2
 write	KEYWORD2
 send	KEYWORD2

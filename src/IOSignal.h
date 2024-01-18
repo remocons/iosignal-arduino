@@ -13,25 +13,34 @@
 // USE_PSRAM: If you need large size memory on ESP boards which has PSRAM.
 // #define USE_PSRAM
 
-enum class STATES
-{
-  OPENING,      // 0
-  OPEN,         // 1
-  CLOSING,      // 2
-  CLOSED,       // 3
-  SERVER_READY, // 4
-  AUTH_FAIL,    // 5
-  AUTH_READY,   // 6
-  READY,        // 7
-  REDIRECTING   // 8
-};
+// # define IO_OPENING       0
+# define IO_OPEN          1
+// # define IO_CLOSING       2
+# define IO_CLOSED        3
+# define IO_SERVER_READY  4
+# define IO_AUTH_FAIL     5
+# define IO_AUTH_READY    6
+# define IO_READY         7
+# define IO_REDIRECTING   8
+  
+// enum class STATES
+// {
+//   OPENING,      // 0
+//   OPEN,         // 1
+//   CLOSING,      // 2
+//   CLOSED,       // 3
+//   SERVER_READY, // 4
+//   AUTH_FAIL,    // 5
+//   AUTH_READY,   // 6
+//   READY,        // 7
+//   REDIRECTING   // 8
+// };
 
 class IOSignal final : public Boho
 {
 public:
   IOSignal(void);
   ~IOSignal();
-  uint8_t state;
 
   enum MsgType : uint8_t
   {
@@ -119,59 +128,47 @@ public:
   };
 
 
-  uint8_t update();
-
+  void loop();
   void begin(Client *client, const char *_host, uint16_t _port);
   void setRxBuffer(size_t size);
   void write(const uint8_t *buffer, uint32_t size);
-
   void send(const uint8_t *buffer, uint32_t size);
   void send_enc_mode(const uint8_t *buffer, uint32_t size);
-
   void ping();
   void pong();
-
   void login(const char *auth_id, const char *auth_key);
   void auth(const char *auth_id, const char *auth_key);
   void auth(const char *auth_id_key);
   uint8_t useAuth;
-
   void set(const char *setString);
   void subscribe(const char *tag);
-
   void signal(const char *tag);
   void signal(const char *tag, const char *data);
   void signal(const char *tag, const char *data1, const char *data2);
   void signal(const char *tag, const uint8_t *data, uint32_t dataLen);
   void signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen, const char *dataKey);
-
   void signal2(const char *target, const char *topic, const char *data);
   void signal2(const char *target, const char *topic, const char *data1, const char *data2);
   void signal2(const char *target, const char *topic, const uint8_t *data, uint32_t dataLen);
   void signal2_e2e(const char *target, const char *topic, const uint8_t *data, uint32_t dataLen, const char *dataKey);
-
   void onMessage(void (*messageCallback)(char *, uint8_t, uint8_t *, size_t));
   void onReady(void (*readyCallback)(void));
-
-
   void close(uint8_t reason);
   void clear(void);
 
-
   uint8_t _buffer[DEFAULT_TX_BUF_SIZE];
-
   union u32buf4 packetLength;
-
   char cid[MAX_CID_LEN + 1];
-  CongPacket cong;
   uint32_t lastTxRxTime = 0; // seconds
   uint32_t pingPeriod = 50;  // seconds
-
   uint8_t encMode = IOSignal::ENC_MODE::AUTO;
+  uint8_t state;
 
+  CongPacket cong;
   Client *client;
   const char *_host;
   uint16_t _port = 55488L;
+
 private:
   void (*messageCallback)(char *, uint8_t, uint8_t *, size_t);
   void (*readyCallback)(void);

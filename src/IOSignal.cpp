@@ -6,28 +6,25 @@
 
 IOSignal::IOSignal()
 {
-  state = static_cast<int>(STATES::OPENING);
+  state = IO_CLOSED;
   setTime(0);
   packetLength.u32 = 0;
   cong = CongPacket();
 }
 
 
-// return code: 0 == normal
-uint8_t IOSignal::update()
+void IOSignal::loop()
 {
   refreshTime();
 
   if( !this->client->connected()){
+      state = IO_CLOSED;
       clear();
       delay(3000); 
       if(this->client->connect( _host , _port) ){
-        // Serial.println(F("Server connected."));
-        return 0;
-      }else{
-        // Serial.print(F("s"));
-        return 3;
+        state = IO_OPEN;
       }
+      return;
   }
 
   if ((getUnixTime() - lastTxRxTime) > pingPeriod)
@@ -40,10 +37,11 @@ uint8_t IOSignal::update()
   if(cong._state >= 250){
     close( cong._state);
     this->client->stop();
-    return cong._state;
+    state = IO_CLOSED;
+    return;
   } 
   
-  if (!cong.ready()) return 0; 
+  if (!cong.ready()) return; 
 
   lastTxRxTime = getUnixTime();
 
@@ -62,7 +60,7 @@ uint8_t IOSignal::update()
     if (tmpbuf == NULL)
     {
       cong.clear();
-      return 1;
+      return;
     }
 
     uint32_t decLen = decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len);
@@ -75,7 +73,7 @@ uint8_t IOSignal::update()
     {
       if (tmpbuf != NULL) free(tmpbuf);
       cong.clear(); 
-      return 2;
+      return;
     }
   }
   else if (message[0] == Boho::MsgType::ENC_E2E)
@@ -98,7 +96,7 @@ uint8_t IOSignal::update()
     if (tmpbuf == NULL)
     {
       cong.clear();
-      return 1;
+      return;
     }
 
     uint32_t decLen = decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len);
@@ -112,7 +110,7 @@ uint8_t IOSignal::update()
     {
       if (tmpbuf != NULL) free(tmpbuf);
       cong.clear();
-      return 2;  
+      return;  
     }
   }
 
@@ -161,7 +159,7 @@ uint8_t IOSignal::update()
     {
       memcpy(cid, message + 1, len - 1);
       cid[len] = 0;
-      state = static_cast<int>(STATES::READY);
+      state = IO_READY;
     }
     else
     {
@@ -176,7 +174,7 @@ uint8_t IOSignal::update()
 
   case IOSignal::MsgType::SERVER_READY:
   {
-    state = static_cast<int>(STATES::SERVER_READY);
+    state = IO_SERVER_READY;
     if (useAuth)
     {
       // Serial.println(F(">> SVR_READY!"));
@@ -197,23 +195,25 @@ uint8_t IOSignal::update()
     clearAuth(); // Boho::clearAuth()
     if (tmpbuf != NULL) free(tmpbuf);
     close(IOSignal::MsgType::SERVER_REQ_CLOSE);
-    return IOSignal::MsgType::SERVER_REQ_CLOSE;
+    return;
   }
 
   case IOSignal::MsgType::SERVER_REDIRECT:
   {
 
     if( len == 7){  // 1 MsgType, ip4, port2 
-      state = static_cast<int>(STATES::REDIRECTING);
+      state = IO_REDIRECTING;
       close(IOSignal::MsgType::SERVER_REDIRECT);
   
       char ipString[16];
       sprintf(ipString,  "%d.%d.%d.%d\0", message[1], message[2], message[3], message[4]);
       uint16_t port = (message[5] << 8 ) + message[6];
       
-      this->client->connect( ipString , port );
+      if( this->client->connect( ipString , port ) ){
+        state = IO_OPEN;
+      }
       if (tmpbuf != NULL) free(tmpbuf);
-      return IOSignal::MsgType::SERVER_REDIRECT;
+      return;
 
     }else{
       break;
@@ -231,7 +231,7 @@ uint8_t IOSignal::update()
 
   case Boho::MsgType::AUTH_ACK:
   {
-    state = static_cast<int>(STATES::AUTH_READY);
+    state = IO_AUTH_READY;
     if (check_auth_ack_hmac(message, len))
     {
       // Serial.println(F(">> AUTH_ACK"));
@@ -246,7 +246,7 @@ uint8_t IOSignal::update()
   }
 
   case Boho::MsgType::AUTH_FAIL:
-    state = static_cast<int>(STATES::AUTH_FAIL);
+    state = IO_AUTH_FAIL;
     // Serial.println(F(">> AUTH_FAIL"));
     break;
 
@@ -257,7 +257,7 @@ uint8_t IOSignal::update()
 
   if (tmpbuf != NULL) free(tmpbuf);
   cong.clear();
-  return 0;
+  return;
 }
 
 
@@ -315,11 +315,11 @@ void IOSignal::send_enc_mode(const uint8_t *buf, uint32_t bufSize)
     int packSize = encrypt_488(enc_buf, buf, bufSize);
     send(enc_buf, packSize);
     free(enc_buf);
-    // ('<< send_enc_mode [ENC_488]')
+    // ('<<  [ENC_488]')
   }
   else
   {
-    // ('<< send_enc_mode  [PLAIN]' )
+    // ('<<  [PLAIN]' )
     send(buf, bufSize);
   }
 }
@@ -363,6 +363,7 @@ void IOSignal::auth(const char *id_key)
 
 void IOSignal::set(const char *setString)
 {
+  if ( state != IO_READY ) return;
   int setLen = strlen(setString);
   if (setLen > 255)
     return;
@@ -396,6 +397,7 @@ void IOSignal::set(const char *setString)
 
 void IOSignal::subscribe(const char *tag)
 {
+  if ( state != IO_READY ) return;
   int tagLen = strlen(tag);
   if (tagLen > 255)
     return;
@@ -450,6 +452,7 @@ void IOSignal::signal2(const char *target, const char *topic, const char *data1,
 // signal : no payload
 void IOSignal::signal(const char *tag)
 {
+  if ( state != IO_READY ) return;
   int tagLen = strlen(tag);
   if (tagLen > 255)
     return;
@@ -486,6 +489,7 @@ void IOSignal::signal(const char *tag)
 // siganl : string payload.
 void IOSignal::signal(const char *tag, const char *data)
 {
+  if ( state != IO_READY ) return;
   int tagLen = strlen(tag);
   if (tagLen > 255)
     return;
@@ -524,6 +528,7 @@ void IOSignal::signal(const char *tag, const char *data)
 // siganl : two string payload.  PAYLOAD_TYPE::MJSON (JSON array )
 void IOSignal::signal(const char *tag, const char *data1, const char *data2)
 {
+  if ( state != IO_READY ) return;
   int tagLen = strlen(tag);
   if (tagLen > 255)
     return;
@@ -571,6 +576,7 @@ void IOSignal::signal(const char *tag, const char *data1, const char *data2)
 // siganl : binary payload.
 void IOSignal::signal(const char *tag, const uint8_t *data, uint32_t dataLen)
 {
+  if ( state != IO_READY ) return;
   int tagLen = strlen(tag); // no count null char
   if (tagLen > 255)
     return;
@@ -607,6 +613,7 @@ void IOSignal::signal(const char *tag, const uint8_t *data, uint32_t dataLen)
 
 void IOSignal::signal2(const char *target, const char *topic, const uint8_t *data, uint32_t dataLen)
 {
+  if ( state != IO_READY ) return;
   int targetLen = strlen(target);
   int topicLen = strlen(topic);
   char tag[targetLen + topicLen + 1];
@@ -710,6 +717,7 @@ void IOSignal::close(uint8_t reason)
   send(_buffer, 2);
   this->client->flush();
   clear();
+  state = IO_CLOSED;
 }
 
 void IOSignal::clear(void)
