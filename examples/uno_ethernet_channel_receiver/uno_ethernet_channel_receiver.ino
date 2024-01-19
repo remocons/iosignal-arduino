@@ -1,5 +1,6 @@
+
 /*
-  ESP8266 General or D1 mini + LED
+  Arduino Uno + Ethernet shield W5100 + LED
 
   Channel message subscriber (receiver) example
   1. connect to the server.
@@ -10,48 +11,39 @@
   1. 서버에 접속합니다.
   2. 버튼을 누르면 "#homeButton" 채널에 메시지를 전송합니다.
   3. "#homeButton" 채널을 구독(subscribe)한 장치가 메시지를 수신합니다.
-
+  
+  https://github.com/remocons/iosignal-arduino
+  
  */
 
-#include <ESP8266WiFi.h>
+#include <SPI.h>
+#include <Ethernet.h>
+#include <string.h>
 #include <IOSignal.h>
-#include <Bounce2.h>
 
-#define LED_PIN    2  // D4 (D1 mini built-in LED)
+#define LED_PIN    3
 
-WiFiClient client;
+// If you have multiple devices, you'll need to change the MAC address.
+byte mac[]{0, 0, 0, 0, 0, 0x08}; 
+EthernetClient client;
 IOSignal io;
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);  // active low 
+  digitalWrite(LED_PIN, LOW); // active High
 
   Serial.begin(115200);
-  Serial.println();
-  Serial.print("Connecting... ");
+  Serial.println(F("Init.."));
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin("WIFI_SSID", "WIFI_PASS");
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  io.setRxBuffer( 200 );
-  io.begin( &client , "io.remocon.kr", 55488);
+  Ethernet.init(10);
+  Ethernet.begin(mac); // DHCP
+  Serial.print(F("IP:"));
+  Serial.println(Ethernet.localIP());
+  
+  io.setRxBuffer( 80 );
+  io.begin( &client, "io.remocon.kr", 55488);
   io.onReady( &onReady );
   io.onMessage( &onMessage );
-}
-
-  
-void loop() {
-    io.loop(); 
 }
 
 
@@ -81,3 +73,9 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
   }
    
 }
+
+
+void loop() {
+    io.loop();   
+}
+

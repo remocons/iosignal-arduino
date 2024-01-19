@@ -1,5 +1,5 @@
 /*
-  ESP8266 General or D1 mini + Button
+  Arduino Uno R3 WiFi + Button (external)
 
   Channel Message Publisher (Sender) Example
   1. connect to the server.
@@ -10,15 +10,19 @@
   1. 서버에 접속합니다.
   2. 버튼을 누르면 "#homeButton" 채널에 메시지를 전송합니다.
   3. "#homeButton" 채널을 구독(subscribe)한 장치가 메시지를 수신합니다.
-
+  
+  https://github.com/remocons/iosignal-arduino
+  
  */
 
-#include <ESP8266WiFi.h>
+#include "WiFiS3.h"
+#include <Arduino.h>
 #include <IOSignal.h>
+#include "Arduino_LED_Matrix.h"
 #include <Bounce2.h>
 
-#define BUTTON_PIN   14 // D5 (D1 mini )
-
+#define BUTTON_PIN D2
+ArduinoLEDMatrix matrix;
 WiFiClient client;
 IOSignal io;
 Bounce2::Button downBtn = Bounce2::Button();
@@ -27,29 +31,21 @@ void setup() {
   downBtn.attach(BUTTON_PIN, INPUT_PULLUP);
   downBtn.interval(5);           
   downBtn.setPressedState(LOW);  
-
+  
   Serial.begin(115200);
-  Serial.println();
-  Serial.print("Connecting... ");
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin("WIFI_SSID", "WIFI_PASS");
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  int status = WL_IDLE_STATUS;
+  while (status != WL_CONNECTED) {
+    Serial.print("WiFi Connecting...");
+    status = WiFi.begin("WIFI_SSID", "WIFI_PASS");
+    delay(10000);
   }
 
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-
   io.setRxBuffer( 200 );
-  io.begin( &client , "io.remocon.kr", 55488);
+  io.begin( &client, "io.remocon.kr", 55488 );
+  io.onReady( &onReady );
 }
 
-  
+
 void loop() {
     io.loop();
     downBtn.update();
@@ -57,5 +53,13 @@ void loop() {
         Serial.println("down");
         io.signal("#homeButton","down");
     }     
+
+}
+
+
+void onReady()
+{
+  Serial.print("onReady cid: ");
+  Serial.println( io.cid );
 }
 

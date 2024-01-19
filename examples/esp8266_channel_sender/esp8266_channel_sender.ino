@@ -1,6 +1,5 @@
-
 /*
- Arduino Uno + Ethernet shield W5100 + Button
+  ESP8266 General or D1 mini + Button
 
   Channel Message Publisher (Sender) Example
   1. connect to the server.
@@ -11,22 +10,19 @@
   1. 서버에 접속합니다.
   2. 버튼을 누르면 "#homeButton" 채널에 메시지를 전송합니다.
   3. "#homeButton" 채널을 구독(subscribe)한 장치가 메시지를 수신합니다.
-
+  
+  https://github.com/remocons/iosignal-arduino
+  
  */
 
-#include <SPI.h>
-#include <Ethernet.h>
-#include <string.h>
+#include <ESP8266WiFi.h>
 #include <IOSignal.h>
 #include <Bounce2.h>
 
-#define BUTTON_PIN  2
+#define BUTTON_PIN   14 // D5 (D1 mini )
 
-// If you have multiple devices, you'll need to change the MAC address.
-byte mac[]{0, 0, 0, 0, 0, 0x07}; 
-EthernetClient client;
+WiFiClient client;
 IOSignal io;
-
 Bounce2::Button downBtn = Bounce2::Button();
 
 void setup() {
@@ -35,25 +31,33 @@ void setup() {
   downBtn.setPressedState(LOW);  
 
   Serial.begin(115200);
-  Serial.println(F("Init.."));
+  Serial.println();
+  Serial.print("Connecting... ");
 
-  Ethernet.init(10);
-  Ethernet.begin(mac); // DHCP
-  Serial.print(F("IP:"));
-  Serial.println(Ethernet.localIP());
-  
-  io.setRxBuffer( 80 );
-  io.begin( &client, "io.remocon.kr", 55488);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin("WIFI_SSID", "WIFI_PASS");
 
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  io.setRxBuffer( 200 );
+  io.begin( &client , "io.remocon.kr", 55488);
 }
 
-
+  
 void loop() {
-  io.loop();
-  downBtn.update();
-  if (downBtn.pressed()) {
-    Serial.println("down");
-    io.signal("#homeButton","down");
-  }     
+    io.loop();
+    downBtn.update();
+    if (downBtn.pressed()) {
+        Serial.println("down");
+        io.signal("#homeButton","down");
+    }     
 }
 
