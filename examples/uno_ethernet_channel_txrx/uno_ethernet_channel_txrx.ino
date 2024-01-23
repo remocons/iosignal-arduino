@@ -10,17 +10,23 @@
 #include <Ethernet.h>
 #include <string.h>
 #include <IOSignal.h>
+#include <Bounce2.h>
 
 #define LED_PIN    3
+#define BUTTON_PIN  2
 
 // If you have multiple devices, you'll need to change the MAC address.
 byte mac[]{0, 0, 0, 0, 0, 0x08}; 
 EthernetClient client;
 IOSignal io;
+Bounce2::Button downBtn = Bounce2::Button();
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW); // active High
+  downBtn.attach(BUTTON_PIN, INPUT_PULLUP);
+  downBtn.interval(5);           
+  downBtn.setPressedState(LOW);  
 
   Serial.begin(115200);
   Serial.println(F("Init.."));
@@ -67,6 +73,11 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
 
 
 void loop() {
-    io.loop();   
+  io.loop();   
+  downBtn.update();
+  if (downBtn.pressed()) {
+    Serial.println("down");
+    io.signal("#homeButton", "down" );
+  }   
 }
 

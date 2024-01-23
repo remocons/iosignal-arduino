@@ -2,31 +2,41 @@
   Arduino Uno R3 WiFi + built-in LED Matrix
 
   https://github.com/remocons/iosignal-arduino
-
+    
  */
 
 #include "WiFiS3.h"
 #include <Arduino.h>
 #include <IOSignal.h>
 #include "Arduino_LED_Matrix.h"
+#include <Bounce2.h>
 
+#define BUTTON_PIN D2
 ArduinoLEDMatrix matrix;
 WiFiClient client;
 IOSignal io;
+Bounce2::Button downBtn = Bounce2::Button();
 
 const uint32_t heart[] = { 0x3184a444, 0x44042081, 0x100a0040 };
 const uint32_t fullOff[] = { 0, 0, 0 };
 int heartStatus = 1;
 
 void setup() {
-  
+  downBtn.attach(BUTTON_PIN, INPUT_PULLUP);
+  downBtn.interval(5);           
+  downBtn.setPressedState(LOW);  
+
   Serial.begin(115200);
-  int status = WL_IDLE_STATUS;
-  while (status != WL_CONNECTED) {
-    Serial.print("WiFi Connecting...");
-    status = WiFi.begin("WIFI_SSID", "WIFI_PASS");
-    delay(10000);
+  WiFi.begin("WIFI_SSID", "WIFI_PASS");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+
   matrix.begin();
   matrix.loadFrame(heart);
   delay(500);
@@ -76,6 +86,12 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
 
 }
 
+
 void loop() {
     io.loop();
+    downBtn.update();
+    if (downBtn.pressed()) {
+        Serial.println("down");
+        io.signal("#homeButton","down");
+    }    
 }

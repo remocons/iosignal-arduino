@@ -10,6 +10,7 @@ To run the client example, you must first install iosignal-cli and then run the 
  `iosignal-cli` [ [github](https://github.com/remocons/iosignal-cli) | [npm](https://www.npmjs.com/package/iosignal-cli) ]
  - support Mac, Linux & Windows
 
+
 ### CLI program install
 ```
 $ npm i -g iosignal-cli
@@ -21,12 +22,13 @@ $ sudo npm i -g iosignal-cli
 ### begin iosignal server
 
 - use -L option to connect Arduino Client.
+- use -l option to connect Browser Client.
 ```
-$ io-server -L 8888
+$ io-server -l 7777 -L 55488
 
 No authentication support.
 WebSocketServer listen: 7777
-congServer listen: 8888
+congServer listen: 55488
 
    ┌───────────────────────────────────────────┐
    │                                           │
@@ -37,26 +39,28 @@ congServer listen: 8888
    │                                           │
    │   CongSocket: nodejs client or CLI        │
    │                                           │
-   │   - Local:    cong://localhost:8888       │
-   │   - Network:  cong://192.168.0.204:8888   │
+   │   - Local:    cong://localhost:55488       │
+   │   - Network:  cong://192.168.0.204:55488   │
    │                                           │
    │   CongSocket: Arduino client              │
    │                                           │
    │   - host: 192.168.0.204                   │
-   │   - port: 8888                            │
+   │   - port: 55488                            │
    │                                           │
    └───────────────────────────────────────────┘
 
 
 ```
 
-- change code with you server host and port info.
-```
-  // from
-  io.begin( &client , "io.remocon.kr", 55488);
+ Change to the server host ip and port number.
 
-  // to
-  io.begin( &client, 192.168.0.204, 8888 );
+```
+  io.begin( &client, 192.168.0.204, 55488 );
+```
+
+The io.remocon.kr public server is temporarily available.
+```
+  io.begin( &client , "io.remocon.kr", 55488);  
 ```
 
 ## Examples
@@ -94,19 +98,25 @@ boards and shields, including:
 
 
 ## iosignal repositories.
-- Javascript: `iosignal` [ [github](https://github.com/remocons/iosignal) | [npm](https://www.npmjs.com/package/iosignal) ]
-  - Node.js server ( WebSocket, CongSocket)
-  - Node.js client ( WebSocket, CongSocket)
-  - Web Browser client( WebSocket)
-- Arduino client: 
-  - Arduino Library Manager: `IOSignal`
-  - or `iosignal-arduino` [ [github](https://github.com/remocons/iosignal-arduino) ]
 
 - CLI program 
   - server and client
   - support mac, linux and windows.
   - `iosignal-cli` [ [github](https://github.com/remocons/iosignal-cli) | [npm](https://www.npmjs.com/package/iosignal-cli) ]
   - install: `sudo npm i -g iosignal-cli` or  `npm i -g iosignal-cli`  
+
+- Javascript: `iosignal` [ [github](https://github.com/remocons/iosignal) | [npm](https://www.npmjs.com/package/iosignal) ]
+  - Node.js server ( WebSocket, CongSocket)
+  - Node.js client ( WebSocket, CongSocket)
+  - Web Browser client( WebSocket)
+
+- Arduino client: 
+  - Arduino Library Manager: `IOSignal`
+  - or `iosignal-arduino` [ [github](https://github.com/remocons/iosignal-arduino) ]
+
+- Arduino example working with remocon web app
+  - Arduino Library Manager: `Remocon`
+  - or `Remocon` [ [github](https://github.com/remocons/remocon-arduino) ]
 
 
 ## IOSignal stack
