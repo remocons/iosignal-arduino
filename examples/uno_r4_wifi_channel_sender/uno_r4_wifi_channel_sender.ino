@@ -11,7 +11,8 @@
 #include "Arduino_LED_Matrix.h"
 #include <Bounce2.h>
 
-#define BUTTON_PIN D2
+#define BUTTON_PIN D12
+
 ArduinoLEDMatrix matrix;
 WiFiClient client;
 IOSignal io;
