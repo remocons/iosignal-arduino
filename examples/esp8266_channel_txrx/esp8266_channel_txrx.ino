@@ -80,6 +80,6 @@ void loop() {
     downBtn.update();
     if (downBtn.pressed()) {
         Serial.println("down");
-        io.signal("#homeButton","down");
+        io.signal("#homeButton","esp8266");
     }    
 }

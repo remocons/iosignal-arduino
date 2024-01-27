@@ -46,7 +46,7 @@ void loop() {
   downBtn.update();
   if (downBtn.pressed()) {
     Serial.println("down");
-    io.signal("#homeButton","down");
+    io.signal("#homeButton","uno3-eth");
   }     
 }
 

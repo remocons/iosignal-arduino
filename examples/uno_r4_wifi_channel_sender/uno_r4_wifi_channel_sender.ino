@@ -50,7 +50,7 @@ void loop() {
     downBtn.update();
     if (downBtn.pressed()) {
         Serial.println("down");
-        io.signal("#homeButton","down");
+        io.signal("#homeButton","uno4-wifi");
     }     
 
 }
