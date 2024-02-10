@@ -35,8 +35,8 @@ void setup() {
   Serial.println(Ethernet.localIP());
   
   io.setRxBuffer( 80 );
-  io.begin( &client , "192.168.0.204", 55488);
-  // io.begin( &client , "io.remocon.kr", 55488);  
+  io.begin( &client , "io.iosignal.net", 55488);  
+  // io.begin( &client , "192.168.0.204", 55488);
 
 }
 

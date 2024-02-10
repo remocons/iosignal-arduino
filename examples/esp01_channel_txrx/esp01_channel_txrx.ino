@@ -1,39 +1,33 @@
 /*
-  ESP8266 General or D1 mini + LED
+  ESP01
 
   https://github.com/remocons/iosignal-arduino
-  
+
  */
 
 #include <ESP8266WiFi.h>
 #include <IOSignal.h>
 #include <Bounce2.h>
 
-#define LED_PIN    2  // D4 (D1 mini built-in LED)
+#define LED_PIN    1  // esp01 built-in LED
+#define BUTTON_PIN   3 // Rx , external button
 
 WiFiClient client;
 IOSignal io;
+Bounce2::Button downBtn = Bounce2::Button();
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, HIGH);  // active low 
-
-  Serial.begin(115200);
-  Serial.println();
-  Serial.print("Connecting... ");
+  downBtn.attach(BUTTON_PIN, INPUT_PULLUP);
+  downBtn.interval(5);           
+  downBtn.setPressedState(LOW);  
 
   WiFi.mode(WIFI_STA);
   WiFi.begin("WIFI_SSID", "WIFI_PASS");
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
 
   io.setRxBuffer( 200 );
   io.begin( &client , "io.iosignal.net", 55488);  
@@ -42,28 +36,14 @@ void setup() {
   io.onMessage( &onMessage );
 }
 
-  
-void loop() {
-    io.loop(); 
-}
-
 
 void onReady()
 {
-  Serial.print("onReady cid: ");
-  Serial.println( io.cid );
   io.subscribe("#homeButton");
 }
 
 void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
 {
-
-  Serial.print(">> signal tag: " );
-  Serial.print( tag );
-  Serial.print(" type: " );
-  Serial.print( payloadType );
-  Serial.print(" size: " );
-  Serial.println( payloadSize );
 
   if( strcmp(tag, "#homeButton") == 0){
     if( digitalRead(LED_PIN ) == HIGH ){
@@ -73,4 +53,13 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
     }
   }
    
+}
+
+
+void loop() {
+    io.loop();
+    downBtn.update();
+    if (downBtn.pressed()) {
+        io.signal("#homeButton","esp01");
+    }    
 }
