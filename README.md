@@ -75,7 +75,7 @@ io.begin( &client , "io.iosignal.net", 55488);
 ```
 2. Communicate with your web browser and Arduino
 
-- Connect to [http://app.iosignal.net](http://app.iosignal.net) using a web browser.
+- Connect to [http://test.iosignal.net](http://test.iosignal.net) using a web browser.
 - Connect to the same server as your Arduino.
 - Press the Send button on the web app to send a signal to the Arduino.
 - Press the button on the Arduino to send signals and receive them on the web browser.
@@ -94,7 +94,7 @@ io.begin( &client , "io.iosignal.net", 55488);
 ```
 2. 웹브라우저와 아두이노 통신하기
 
-- 웹브라우저로 [http://app.iosignal.net](http://app.iosignal.net) 에 접속합니다.
+- 웹브라우저로 [http://test.iosignal.net](http://test.iosignal.net) 에 접속합니다.
 - 아두이노와 동일한 서버에 접속합니다.
 - 웹앱에서 전송 버튼을 눌러서 아두이노에 시그널을 송신합니다.
 - 아두이노의 버튼을 눌러서 시그널을 보내고 웹브라우저에서 수신합니다.
