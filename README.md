@@ -1,107 +1,84 @@
-# IOSignal Arduino Client
+# Arduino IOSignal Client library
 
-Arduino Client for [`IOSignal`](https://github.com/remocons/iosignal).
+The Arduino iosignal library provides an Arduino client and example sources.
+[kr]Arduino iosignal 라이브러리는 아두이노 client 및  예제소스를 제공합니다.
+
+## iosignal
+iosignal supports real-time communication between web browsers, node.js, and arduino. It also provides secure authentication and encrypted communication. The signaling protocol is built-in, so the server can be used without programming.
+
+[Kr] iosignal 은 웹브라우저, node.js , arduino 간의 실시간 통신을 지원합니다. 또한 보안 인증과 암호통신 기능도 제공됩니다. 시그널링 프로토콜이 내장되어 있어서 서버는 프로그래밍 없이 사용 가능합니다.
+
+
 
 
 ## IOSignal Server
 
-To run the client example, you must first install iosignal-cli and then run the iosignal server.
+iosignal server 는 다수의 클라이언트의 접속을 유지하고,  클라이언트간의 데이타 송수신을 중계해주는 역활을 하며, iosgignal 통신시 꼭 필요합니다.
 
- `iosignal-cli` [ [github](https://github.com/remocons/iosignal-cli) | [npm](https://www.npmjs.com/package/iosignal-cli) ]
- - support Mac, Linux & Windows
+직접 운영할 수 도 있지만 일단은 공개된 서버를 사용하면됩니다.
 
+차후 직접 서버를 운영하려면  `iosignal-cli` [ [github](https://github.com/remocons/iosignal-cli) 프로그램을 이용하면 됩니다. 해당 정보는 해당 저장소 안내문을 참고하시기 바랍니다.
+ 
 
-### CLI program install
-```sh
-# global install.
-$ npm install -g iosignal-cli
-
-# If you encounter a permissions error, use sudo.
-$ sudo npm install -g iosignal-cli
+아두이노가 접속가능한 공개서버 정보는 아래와 같습니다.
 
 ```
-## IOSignal server
-
-- use `io-server` command.
-- `ios` is a shortened name for io-server.
-
-- use -L option to connect Arduino Client.
-- use -l option to connect Browser Client.
-
-```sh
- % io-server -l 7777 -L 55488
-opening WebSocket Server: 7777
-opening CongSocket Server: 55488
-
-   ┌─────────────────────────────────────────────┐
-   │                                             │
-   │   Serving                                   │
-   │                                             │
-   │   IOSignal Over WebSocket                   │
-   │                                             │
-   │    Web Browser & Node.js                    │
-   │    - Local:    ws://localhost:7777          │
-   │    - Network:  ws://192.168.0.213:7777      │
-   │                                             │
-   │   IOSignal Over CongSocket                  │
-   │                                             │
-   │    Node.js                                  │
-   │    - Local:    cong://localhost:55488       │
-   │    - Network:  cong://192.168.0.213:55488   │
-   │                                             │
-   │    Arduino                                  │
-   │    - host: 192.168.0.213                    │
-   │    - port: 55488                            │
-   │                                             │
-   └─────────────────────────────────────────────┘
-
+url: io.iosignal.net
+port: 55488
 ```
+
 
 ## Examples
+
+본 라이브러리에는 간단한 시그널 송수신 예제가 포함되어 있습니다.
 
 The library comes with a number of example sketches. See File > Examples > IOSignal
 within the Arduino application.
 
-1. Prepare the server.
-- You can run your own server by installing iosignal-cli.
-- Connect to the server using the server IP address and port number like below.
-```c
-io.begin( &client , "192.168.0.204", 55488);
-```
-- If you don't have a server, you can use the public server for trial.
-- Connect to it using the following code
+### Server setup 서버설정
+
+#### CASE 1. If you're using the default public server.
+- 공개 서버를 그대로 사용하는경우 기본 코드를 그대로 두면 됩니다.
+- Use the server access code as is, without modification.
+
 ```c
 io.begin( &client , "io.iosignal.net", 55488);
 ```
-2. Communicate with your web browser and Arduino
 
+#### CASE 2. the other server.
+- 다른 서버를 사용할 경우 서버 주소와 포트번호를 변경해줍니다.
+- If you're using a different server, change the server address and port number.
+
+```c
+io.begin( &client , "192.168.0.204", 55488);
+```
+
+
+## Control your Arduino with a webapp
+
+ With iosignal client for javascript, you can use a web browser (webapp) to communicate with your Arduino.  Test it with a publicly available webapp!
+
+[kr] iosignal client for javascript 를 사용하면 웹브라우저(웹앱)도 아두이노와 통신이 가능합니다.
+ 공개된 웹앱으로 테스트 해보세요!
+
+### open the web app and try realtime communication.
 - Connect to [http://test.iosignal.net](http://test.iosignal.net) using a web browser.
 - Connect to the same server as your Arduino.
+- warning. the port number is not equal to arduino using.
 - Press the Send button on the web app to send a signal to the Arduino.
 - Press the button on the Arduino to send signals and receive them on the web browser.
 
-[Korean] 
-1. 서버를 준비합니다.
-- iosignal-cli 를 설치하여 직접 서버를 운영할 수 있습니다.
-- 아래와 같이 서버 ip주소와  port번호를 사용하여 접속합니다.
-```c
-io.begin( &client , "192.168.0.204", 55488);
-```
-- 서버가 없다면 체험용 공개 서버를 사용할 수 있습니다.
-- 아래 코드를 사용하여 접속합니다.
-```c
-io.begin( &client , "io.iosignal.net", 55488);
-```
-2. 웹브라우저와 아두이노 통신하기
+
+### [kr] 웹앱을 실행하여 테스트해보세요
 
 - 웹브라우저로 [http://test.iosignal.net](http://test.iosignal.net) 에 접속합니다.
 - 아두이노와 동일한 서버에 접속합니다.
+- 주의. 아두이노 접속 포트와  웹브라우저 접속 포트번호는 다릅니다.
 - 웹앱에서 전송 버튼을 눌러서 아두이노에 시그널을 송신합니다.
 - 아두이노의 버튼을 눌러서 시그널을 보내고 웹브라우저에서 수신합니다.
 
 
-
-## Features
+##  IOSignal Features
 
 ### Built-in Message Transport Protocol
 - pub/sub style multicast: by channel name.
@@ -124,33 +101,35 @@ underlying network hardware. This means it Just Works with a growing number of
 boards and shields, including:
 
 ### tested
- - Arduino Uno + Ethernet Shield
- - Arduino UNO R4 WiFi
+ - Arduino Uno R3 + Ethernet Shield
+ - Arduino Uno R4 WiFi
  - ESP8266
  - ESP32
+ - ESP01
 
 
-## iosignal repositories.
+## IOSignal repositories.
 
-- CLI program 
-  - server and client
-  - support mac, linux and windows.
-  - `iosignal-cli` [ [github](https://github.com/remocons/iosignal-cli) | [npm](https://www.npmjs.com/package/iosignal-cli) ]
-  - install: `sudo npm i -g iosignal-cli` or  `npm i -g iosignal-cli`  
+- Javascript: `iosignal` [ [github](https://github.com/remocons/iosignal) | [npm](https://www.npmjs.com/package/iosignal) ]
+    - Node.js server ( WebSocket, CongSocket)
+    - Node.js client ( WebSocket, CongSocket)
+    - Web Browser client( WebSocket)
 
-- Javascript: `iosignal` [ [github](https://github.com/remocons/iosignal) | [npm](https://www.npmjs.com/package/iosignal) ]
-  - Node.js server ( WebSocket, CongSocket)
-  - Node.js client ( WebSocket, CongSocket)
-  - Web Browser client( WebSocket)
+- CLI program
+    - `iosignal-cli` [ [github](https://github.com/remocons/iosignal-cli) | [npm](https://www.npmjs.com/package/iosignal-cli) ]
+    - install: `npm i -g iosignal-cli` or `sudo npm i -g iosignal-cli`
+    - support mac, linux and windows.
+    - server and client
 
-- Arduino client: 
-  - Arduino Library Manager: `IOSignal`
-  - or `iosignal-arduino` [ [github](https://github.com/remocons/iosignal-arduino) ]
+- Arduino iosignal library and examples:
+    - use Arduino Library Manager: `iosignal`
+    - or `iosignal-arduino` [ [github](https://github.com/remocons/iosignal-arduino) ]
+    - web app : http://test.iosignal.net
 
-- Arduino example working with remocon web app
-  - Arduino Library Manager: `Remocon`
-  - or `Remocon` [ [github](https://github.com/remocons/remocon-arduino) ]
-
+- Arduino remocon library and examples:
+    - use Arduino Library Manager: `remocon`
+    - or `remocon-arduino` [ [github](https://github.com/remocons/remocon-arduino) ]
+    - web app : https://remocon.kr
 
 ## IOSignal stack
 
