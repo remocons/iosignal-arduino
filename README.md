@@ -1,26 +1,35 @@
 # Arduino IOSignal Client library
 
 The Arduino iosignal library provides an Arduino client and example sources.
+
 [kr]Arduino iosignal 라이브러리는 아두이노 client 및  예제소스를 제공합니다.
 
 ## iosignal
 iosignal supports real-time communication between web browsers, node.js, and arduino. It also provides secure authentication and encrypted communication. The signaling protocol is built-in, so the server can be used without programming.
 
-[Kr] iosignal 은 웹브라우저, node.js , arduino 간의 실시간 통신을 지원합니다. 또한 보안 인증과 암호통신 기능도 제공됩니다. 시그널링 프로토콜이 내장되어 있어서 서버는 프로그래밍 없이 사용 가능합니다.
+[Kr] iosignal 은 웹브라우저, node.js , arduino 간의 실시간 통신을 지원합니다. 또한 보안 인증과 암호통신 기능도 제공됩니다. 시그널링 프로토콜이 내장된 서버는 프로그래밍 없이도 사용 가능합니다.
 
 
 
 
 ## IOSignal Server
 
-iosignal server 는 다수의 클라이언트의 접속을 유지하고,  클라이언트간의 데이타 송수신을 중계해주는 역활을 하며, iosgignal 통신시 꼭 필요합니다.
+The iosignal server maintains the connection of multiple clients, relays data transmission and reception between clients, and is essential for iosignal communication.
 
+You can run your own server, but for now, you can use the public server for testing.
+
+If you want to run your own server in the future, you can use the [iosignal-cli](https://github.com/remocons/iosignal-cli) program. Please refer to the corresponding repository documentation for that information.
+
+[kr] iosignal server 는 다수의 클라이언트의 접속을 유지하고,  클라이언트간의 데이타 송수신을 중계해주는 역활을 하며, iosgignal 통신시 꼭 필요합니다.
 직접 운영할 수 도 있지만 일단은 공개된 서버를 사용하면됩니다.
 
-차후 직접 서버를 운영하려면  `iosignal-cli` [ [github](https://github.com/remocons/iosignal-cli) 프로그램을 이용하면 됩니다. 해당 정보는 해당 저장소 안내문을 참고하시기 바랍니다.
+차후 직접 서버를 운영하려면  [iosignal-cli](https://github.com/remocons/iosignal-cli) 을 이용하면 됩니다. 해당 정보는 해당 저장소 안내문을 참고하시기 바랍니다.
  
 
-아두이노가 접속가능한 공개서버 정보는 아래와 같습니다.
+
+The test server used to connect to the Arduino is shown below.
+
+[kr] 아두이노 접속시 사용될 테스트 서버는 아래와 같습니다.
 
 ```
 url: io.iosignal.net
@@ -30,24 +39,26 @@ port: 55488
 
 ## Examples
 
-본 라이브러리에는 간단한 시그널 송수신 예제가 포함되어 있습니다.
 
-The library comes with a number of example sketches. See File > Examples > IOSignal
-within the Arduino application.
+The library comes with a number of example sketches. 
 
-### Server setup 서버설정
+kr.본 라이브러리에는 간단한 시그널 송수신 예제가 포함되어 있습니다.
+
+See `File` > `Examples` > `IOSignal` within the Arduino application.
+
+### Server setup (서버 설정)
 
 #### CASE 1. If you're using the default public server.
-- 공개 서버를 그대로 사용하는경우 기본 코드를 그대로 두면 됩니다.
 - Use the server access code as is, without modification.
+- 공개 서버를 그대로 사용하는경우 기본 코드를 그대로 두면 됩니다.
 
 ```c
 io.begin( &client , "io.iosignal.net", 55488);
 ```
 
 #### CASE 2. the other server.
-- 다른 서버를 사용할 경우 서버 주소와 포트번호를 변경해줍니다.
 - If you're using a different server, change the server address and port number.
+- 다른 서버를 사용할 경우 서버 주소와 포트번호를 변경해줍니다.
 
 ```c
 io.begin( &client , "192.168.0.204", 55488);
