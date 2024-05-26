@@ -22,8 +22,8 @@
 #include <IOSignal.h>
 #include <Bounce2.h>
 
-#define LED_PIN    1  // esp01 built-in LED
-#define BUTTON_PIN   3 // Rx , external button
+#define LED_PIN       1
+#define BUTTON_PIN    2
 
 WiFiClient client;
 IOSignal io;
