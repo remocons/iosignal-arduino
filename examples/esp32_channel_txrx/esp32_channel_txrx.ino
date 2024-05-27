@@ -23,8 +23,8 @@
 #include <IOSignal.h>
 #include <Bounce2.h>
 
-#define LED_PIN     26
-#define BUTTON_PIN  27 
+#define LED_PIN     2
+#define BUTTON_PIN  12
 
 WiFiClient client;
 IOSignal io;
