@@ -51,11 +51,7 @@ void IOSignal::loop()
 
   if (message[0] == Boho::MsgType::ENC_488)
   {
-#ifdef USE_PSRAM
-    tmpbuf = (uint8_t *)ps_malloc(len);
-#else
-    tmpbuf = (uint8_t *)malloc(len);
-#endif
+    tmpbuf = (uint8_t *)dynamic_alloc(len);
 
     if (tmpbuf == NULL)
     {
@@ -87,11 +83,7 @@ void IOSignal::loop()
     // Serial.println(F(">> E2"));
     memcpy(packetLength.buf, cong._buffer + 1, 4);
     int encHeaderSize = packetLength.u32;
-#ifdef USE_PSRAM
-    tmpbuf = (uint8_t *)ps_malloc(encHeaderSize);
-#else
-    tmpbuf = (uint8_t *)malloc(encHeaderSize);
-#endif
+    uint8_t *tmpbuf = (uint8_t *)dynamic_alloc(encHeaderSize);
 
     if (tmpbuf == NULL)
     {
@@ -273,11 +265,7 @@ void IOSignal::begin(Client *client, const char *_host, uint16_t _port )
 void IOSignal::setRxBuffer(size_t size)
 {
   // Serial.println(F("-- setRxBuffer: "));
-#ifdef USE_PSRAM
-  uint8_t *buf = (uint8_t *)ps_malloc(size);
-#else
-  uint8_t *buf = (uint8_t *)malloc(size);
-#endif
+  uint8_t *buf = (uint8_t *)dynamic_alloc(size);
 
   if (buf == NULL)
   {
@@ -304,11 +292,7 @@ void IOSignal::send_enc_mode(const uint8_t *buf, uint32_t bufSize)
   if (encMode == IOSignal::ENC_MODE::YES ||
       encMode == IOSignal::ENC_MODE::AUTO && isAuthorized)
   {
-#ifdef USE_PSRAM
-    uint8_t *enc_buf = (uint8_t *)ps_malloc(bufSize + 25);
-#else
-    uint8_t *enc_buf = (uint8_t *)malloc(bufSize + 25);
-#endif
+    uint8_t *enc_buf = (uint8_t *)dynamic_alloc(bufSize + 25);
     if (enc_buf == NULL)
       return;
 
@@ -377,11 +361,7 @@ void IOSignal::set(const char *setString)
   }
   else
   {
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(setLen + 2);
-#else
-    buf = (uint8_t *)malloc(setLen + 2);
-#endif
+    uint8_t *buf = (uint8_t *)dynamic_alloc(setLen + 2);
     if (buf == NULL)
       return;
   }
@@ -410,11 +390,7 @@ void IOSignal::subscribe(const char *tag)
   }
   else
   {
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(2 + tagLen);
-#else
-    buf = (uint8_t *)malloc(2 + tagLen);
-#endif
+    uint8_t *buf = (uint8_t *)dynamic_alloc(2 + tagLen);
     if (buf == NULL)
       return;
   }
@@ -466,12 +442,7 @@ void IOSignal::signal(const char *tag)
   }
   else
   {
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(2 + tagLen);
-#else
-    buf = (uint8_t *)malloc(2 + tagLen);
-#endif
-
+    uint8_t *buf = (uint8_t *)dynamic_alloc(2 + tagLen);
     if (buf == NULL)
       return;
   }
@@ -504,12 +475,7 @@ void IOSignal::signal(const char *tag, const char *data)
   }
   else
   {
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(3 + tagLen + dataLen);
-#else
-    buf = (uint8_t *)malloc(3 + tagLen + dataLen);
-#endif
-
+    buf = (uint8_t *)dynamic_alloc(3 + tagLen + dataLen);
     if (buf == NULL)
       return;
   }
@@ -546,12 +512,7 @@ void IOSignal::signal(const char *tag, const char *data1, const char *data2)
   }
   else
   {
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(3 + tagLen + dataLen);
-#else
-    buf = (uint8_t *)malloc(3 + tagLen + dataLen);
-#endif
-
+    buf = (uint8_t *)dynamic_alloc(3 + tagLen + dataLen);    
     if (buf == NULL)
       return;
   }
@@ -589,11 +550,7 @@ void IOSignal::signal(const char *tag, const uint8_t *data, uint32_t dataLen)
   }
   else
   {
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(3 + tagLen + dataLen);
-#else
-    buf = (uint8_t *)malloc(3 + tagLen + dataLen);
-#endif
+    buf = (uint8_t *)dynamic_alloc(3 + tagLen + dataLen);
     if (buf == NULL)
       return;
   }
@@ -641,11 +598,7 @@ void IOSignal::signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen
     // encMode on:
     // buf size: enc_e2e header(21) + IOSignalHeader( 3+tagLen) |  encpack(25) + dataLen
     dataOffset = 21 + 3 + tagLen;
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(dataOffset + 25 + dataLen);
-#else
-    buf = (uint8_t *)malloc(dataOffset + 25 + dataLen);
-#endif
+    buf = (uint8_t *)dynamic_alloc(dataOffset + 25 + dataLen);
     if (buf == NULL)
       return;
 
@@ -664,11 +617,7 @@ void IOSignal::signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen
   {
     // encMode off:   IOSignalMsg Signal Header( 3+tagLen) | encpack(25) + dataLen
     dataOffset = 3 + tagLen;
-#ifdef USE_PSRAM
-    buf = (uint8_t *)ps_malloc(dataOffset + 25 + dataLen);
-#else
-    buf = (uint8_t *)malloc(dataOffset + 25 + dataLen);
-#endif
+    buf = (uint8_t *)dynamic_alloc(dataOffset + 25 + dataLen);
     if (buf == NULL)
       return;
 

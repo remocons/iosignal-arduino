@@ -24,7 +24,7 @@
 #include <Bounce2.h>
 
 #define LED_PIN     2
-#define BUTTON_PIN  12
+#define BUTTON_PIN  12 
 
 WiFiClient client;
 IOSignal io;
@@ -66,6 +66,7 @@ void onReady()
   Serial.print("onReady cid: ");
   Serial.println( io.cid );
   io.subscribe("#homeButton");
+  io.subscribe("#robot");
 }
 
 void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
@@ -84,6 +85,16 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
     }else{
       digitalWrite( LED_PIN , HIGH );
     }
+  }
+  if( (strcmp(tag, "#robot") == 0) && payloadSize == 4 ){
+    Serial.print("#robot ");
+    Serial.print( payload[0] );
+    Serial.print( " ");
+    Serial.print( payload[1] );
+    Serial.print( " ");
+    Serial.print( payload[2] );
+    Serial.print( " ");
+    Serial.println( payload[3] );
   }
    
 }

@@ -10,9 +10,6 @@
 #define DEFAULT_TX_BUF_SIZE 50
 #define MAX_CID_LEN 12
 
-// USE_PSRAM: If you need large size memory on ESP boards which has PSRAM.
-// #define USE_PSRAM
-
 // # define IO_OPENING       0
 # define IO_OPEN          1
 // # define IO_CLOSING       2

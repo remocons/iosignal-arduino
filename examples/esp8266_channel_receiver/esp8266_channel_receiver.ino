@@ -22,7 +22,7 @@
 #include <IOSignal.h>
 #include <Bounce2.h>
 
-#define LED_PIN    2  // D4 (D1 mini built-in LED)
+#define LED_PIN    2
 
 WiFiClient client;
 IOSignal io;
