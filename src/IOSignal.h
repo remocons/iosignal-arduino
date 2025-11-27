@@ -10,28 +10,22 @@
 #define DEFAULT_TX_BUF_SIZE 50
 #define MAX_CID_LEN 12
 
-// # define IO_OPENING       0
+# define IO_CONNECTING    0  // JS
 # define IO_OPEN          1
-// # define IO_CLOSING       2
+# define IO_SERVER_READY  10
+# define IO_AUTH_REQ      11
+# define IO_SERVER_NONCE  12
+# define IO_AUTH_HMAC     13
+# define IO_AUTH_ACK      14
+# define IO_AUTH_FAIL     15
+# define IO_AUTH_CLEAR    16
+# define IO_CID_REQ       17
+# define IO_CID_RES       18
+# define IO_READY         19
+# define IO_CLOSING       2  // JS
 # define IO_CLOSED        3
-# define IO_SERVER_READY  4
-# define IO_AUTH_FAIL     5
-# define IO_AUTH_READY    6
-# define IO_READY         7
-# define IO_REDIRECTING   8
-  
-// enum class STATES
-// {
-//   OPENING,      // 0
-//   OPEN,         // 1
-//   CLOSING,      // 2
-//   CLOSED,       // 3
-//   SERVER_READY, // 4
-//   AUTH_FAIL,    // 5
-//   AUTH_READY,   // 6
-//   READY,        // 7
-//   REDIRECTING   // 8
-// };
+# define IO_STOP          4
+# define IO_REDIRECTING   5
 
 class IOSignal final : public Boho
 {
@@ -67,7 +61,7 @@ public:
     CID_REQ = 0xC1,
     CID_RES = 0xC2,
     QUOTA_LEVEL = 0xC3,
-    SERVER_CLEAR_AUTH = 0xC4,
+    AUTH_CLEAR = 0xC4,
     SERVER_REDIRECT = 0xC5,
     // ..
     LOOP = 0xCB,
@@ -137,7 +131,6 @@ public:
   void auth(const char *auth_id, const char *auth_key);
   void auth(const char *auth_id_key);
   uint8_t useAuth;
-  void set(const char *setString);
   void subscribe(const char *tag);
   void signal(const char *tag);
   void signal(const char *tag, const char *data);
@@ -147,9 +140,9 @@ public:
   void signal2(const char *target, const char *topic, const char *data);
   void signal2(const char *target, const char *topic, const char *data1, const char *data2);
   void signal2(const char *target, const char *topic, const uint8_t *data, uint32_t dataLen);
-  void signal2_e2e(const char *target, const char *topic, const uint8_t *data, uint32_t dataLen, const char *dataKey);
   void onMessage(void (*messageCallback)(char *, uint8_t, uint8_t *, size_t));
   void onReady(void (*readyCallback)(void));
+  void onError(void (*errorCallback)(uint8_t));
   void close(uint8_t reason);
   void clear(void);
 
@@ -167,8 +160,10 @@ public:
   uint16_t _port = 55488L;
 
 private:
+  uint8_t* _rx_buffer = nullptr;
   void (*messageCallback)(char *, uint8_t, uint8_t *, size_t);
   void (*readyCallback)(void);
+  void (*errorCallback)(uint8_t);
 };
 
 #endif

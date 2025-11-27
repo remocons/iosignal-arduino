@@ -35,6 +35,9 @@ void IOSignal::loop()
 
   cong.run();
   if(cong._state >= 250){
+    if (errorCallback) {
+        errorCallback(cong._state);
+    }
     close( cong._state);
     this->client->stop();
     state = IO_CLOSED;
@@ -83,7 +86,7 @@ void IOSignal::loop()
     // Serial.println(F(">> E2"));
     memcpy(packetLength.buf, cong._buffer + 1, 4);
     int encHeaderSize = packetLength.u32;
-    uint8_t *tmpbuf = (uint8_t *)dynamic_alloc(encHeaderSize);
+    tmpbuf = (uint8_t *)dynamic_alloc(encHeaderSize);
 
     if (tmpbuf == NULL)
     {
@@ -181,18 +184,20 @@ void IOSignal::loop()
     break;
   }
 
-  case IOSignal::MsgType::SERVER_CLEAR_AUTH:
+  case IOSignal::MsgType::AUTH_CLEAR:
   {
     useAuth = false;
     clearAuth(); // Boho::clearAuth()
     if (tmpbuf != NULL) free(tmpbuf);
-    close(IOSignal::MsgType::SERVER_REQ_CLOSE);
+    close(IOSignal::MsgType::AUTH_CLEAR);
+    if (errorCallback) {
+        errorCallback( IO_AUTH_CLEAR);
+    }
     return;
   }
 
   case IOSignal::MsgType::SERVER_REDIRECT:
   {
-
     if( len == 7){  // 1 MsgType, ip4, port2 
       state = IO_REDIRECTING;
       close(IOSignal::MsgType::SERVER_REDIRECT);
@@ -223,7 +228,7 @@ void IOSignal::loop()
 
   case Boho::MsgType::AUTH_ACK:
   {
-    state = IO_AUTH_READY;
+    state = IO_AUTH_ACK;
     if (check_auth_ack_hmac(message, len))
     {
       // Serial.println(F(">> AUTH_ACK"));
@@ -240,6 +245,9 @@ void IOSignal::loop()
   case Boho::MsgType::AUTH_FAIL:
     state = IO_AUTH_FAIL;
     // Serial.println(F(">> AUTH_FAIL"));
+    if (errorCallback) {
+        errorCallback( IO_AUTH_FAIL);
+    }
     break;
 
   default:
@@ -265,14 +273,17 @@ void IOSignal::begin(Client *client, const char *_host, uint16_t _port )
 void IOSignal::setRxBuffer(size_t size)
 {
   // Serial.println(F("-- setRxBuffer: "));
-  uint8_t *buf = (uint8_t *)dynamic_alloc(size);
+  if (_rx_buffer != nullptr) { // Free previous buffer if any
+      free(_rx_buffer);
+  }
+  _rx_buffer = (uint8_t *)dynamic_alloc(size);
 
-  if (buf == NULL)
+  if (_rx_buffer == NULL)
   {
     // Serial.println(F("\n-- NO RX_BUFFER!"));
     return;
   }
-  cong.setBufferSize(buf, size);
+  cong.setBufferSize(_rx_buffer, size);
 }
 
 void IOSignal::write(const uint8_t *buffer, uint32_t size)
@@ -345,35 +356,6 @@ void IOSignal::auth(const char *id_key)
   useAuth = true;
 }
 
-void IOSignal::set(const char *setString)
-{
-  if ( state != IO_READY ) return;
-  int setLen = strlen(setString);
-  if (setLen > 255)
-    return;
-
-  uint8_t *buf = NULL;
-
-  bool useDefaultBuffer = (setLen + 2) <= DEFAULT_TX_BUF_SIZE;
-  if (useDefaultBuffer)
-  {
-    buf = _buffer;
-  }
-  else
-  {
-    uint8_t *buf = (uint8_t *)dynamic_alloc(setLen + 2);
-    if (buf == NULL)
-      return;
-  }
-
-  buf[0] = IOSignal::MsgType::SET;
-  buf[1] = (uint8_t)setLen;
-  strcpy((char *)buf + 2, setString);
-  send_enc_mode(buf, 2 + setLen);
-
-  if (!useDefaultBuffer)
-    free(buf);
-}
 
 void IOSignal::subscribe(const char *tag)
 {
@@ -633,19 +615,6 @@ void IOSignal::signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen
   free(buf);
 }
 
-void IOSignal::signal2_e2e(const char *target, const char *topic, const uint8_t *data, uint32_t dataLen, const char *dataKey)
-{
-  int targetLen = strlen(target);
-  int topicLen = strlen(topic);
-  if ((targetLen + topicLen) > 255)
-    return;
-
-  char tag[targetLen + topicLen + 1];
-  memcpy(tag, target, targetLen);
-  memcpy(tag + targetLen, topic, topicLen);
-  tag[targetLen + topicLen] = 0;
-  signal_e2e(tag, data, dataLen, dataKey);
-}
 
 void IOSignal::onMessage(void (*messageCallback)(char *, uint8_t, uint8_t *, size_t))
 {
@@ -655,6 +624,11 @@ void IOSignal::onMessage(void (*messageCallback)(char *, uint8_t, uint8_t *, siz
 void IOSignal::onReady(void (*readyCallback)(void))
 {
   this->readyCallback = readyCallback;
+}
+
+void IOSignal::onError(void (*errorCallback)(uint8_t))
+{
+  this->errorCallback = errorCallback;
 }
 
 
@@ -679,4 +653,7 @@ void IOSignal::clear(void)
 
 IOSignal::~IOSignal()
 {
+  if (_rx_buffer != nullptr) {
+    free(_rx_buffer);
+  }
 }

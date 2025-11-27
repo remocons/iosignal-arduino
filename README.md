@@ -142,9 +142,6 @@ boards and shields, including:
     - or `remocon-arduino` [ [github](https://github.com/remocons/remocon-arduino) ]
     - web app : https://remocon.kr
 
-## IOSignal stack
-
-![IOSignal](./img/iosignal_stack.png)
 
 ## License
 
