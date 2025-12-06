@@ -14,11 +14,10 @@
 # define IO_OPEN          1
 # define IO_SERVER_READY  10
 # define IO_AUTH_REQ      11
-# define IO_SERVER_NONCE  12
-# define IO_AUTH_HMAC     13
-# define IO_AUTH_ACK      14
-# define IO_AUTH_FAIL     15
-# define IO_AUTH_CLEAR    16
+# define IO_AUTH_RES      12
+# define IO_AUTH_FAIL     13
+# define IO_AUTH_CLEAR    14
+
 # define IO_CID_REQ       17
 # define IO_CID_RES       18
 # define IO_READY         19
@@ -46,15 +45,6 @@ public:
     ADMIN_RES = 0xA1,
 
     // B. Boho is using Bx.
-    // AUTH_REQ = 0xB0,
-    // AUTH_NONCE,
-    // AUTH_HMAC,
-    // AUTH_ACK,
-    // AUTH_FAIL,
-    // AUTH_EXT,
-    // ENC_PACK,
-    // ENC_E2E,
-    // ENC_488,
 
     // C. IOSignal status contorl.
     SERVER_READY = 0xC0,

@@ -167,14 +167,14 @@ void IOSignal::loop()
     break;
   }
 
-  case IOSignal::MsgType::SERVER_READY:
+  case Boho::MsgType::SERVER_TIME_NONCE: // SERVER_READY
   {
     state = IO_SERVER_READY;
     if (useAuth)
     {
-      // Serial.println(F(">> SVR_READY!"));
-      size_t size = auth_req(_buffer);
-      send(_buffer, size);
+      uint8_t authPack[MetaSize_SERVER_TIME_NONCE];
+      size_t auth_len = auth_req(authPack, message, len);
+      send(authPack, auth_len);
     }
     else
     {
@@ -217,27 +217,21 @@ void IOSignal::loop()
     }
   }
 
-  case Boho::MsgType::AUTH_NONCE:
+  case Boho::MsgType::AUTH_RES:
   {
-    uint8_t authPack[MetaSize_AUTH_HMAC];
-    size_t auth_len = auth_hmac(authPack, message, len);
-    send(authPack, auth_len);
-    // Serial.println(F(">> AUTH_NONCE , sent authPack"));
-    break;
-  }
-
-  case Boho::MsgType::AUTH_ACK:
-  {
-    state = IO_AUTH_ACK;
-    if (check_auth_ack_hmac(message, len))
+    state = IO_AUTH_RES;
+    if (verify_auth_res(message, len))
     {
-      // Serial.println(F(">> AUTH_ACK"));
+      // Serial.println(F(">> AUTH_RES"));
       _buffer[0] = IOSignal::MsgType::CID_REQ;
       send(_buffer, 1);
     }
     else
     {
-      // Serial.println(F(">> WRONG SERVER AUTH_ACK"));
+      if (errorCallback) {
+          errorCallback( IO_AUTH_FAIL);
+      }
+      // Serial.println(F(">> WRONG SERVER AUTH_RES"));
     }
     break;
   }
@@ -564,7 +558,7 @@ void IOSignal::signal2(const char *target, const char *topic, const uint8_t *dat
 
 void IOSignal::signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen, const char *dataKey)
 {
-
+  if ( state != IO_READY ) return;
   int tagLen = strlen(tag);
   if (tagLen > 255)
     return;
