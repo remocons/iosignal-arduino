@@ -29,6 +29,7 @@ signal2	KEYWORD2
 signal_e2e	KEYWORD2
 onMessage	KEYWORD2
 onReady	KEYWORD2
+onError	KEYWORD2
 clear	KEYWORD2
 setRxBuffer	KEYWORD2
 
@@ -41,9 +42,12 @@ clearAuth	KEYWORD2
 set_id8	KEYWORD2
 set_hash_id8	KEYWORD2
 set_key	KEYWORD2
+set_id_key	KEYWORD2
 setTime	KEYWORD2
+setClientTimeToServerTime	KEYWORD2
 refreshTime	KEYWORD2
 getUnixTime	KEYWORD2
+getMilTime	KEYWORD2
 set_salt12	KEYWORD2
 set_clock_rand	KEYWORD2
 set_clock_nonce	KEYWORD2
@@ -56,12 +60,15 @@ encryptPack	KEYWORD2
 decryptPack	KEYWORD2
 encrypt_e2e	KEYWORD2
 decrypt_e2e	KEYWORD2
-login	KEYWORD2
 auth_req	KEYWORD2
 verify_auth_res	KEYWORD2
 encrypt_488	KEYWORD2
 decrypt_488	KEYWORD2
-
+dynamic_alloc	KEYWORD2
+boho_print_time	KEYWORD2
+boho_print_hex	KEYWORD2
+boho_index_print_hex	KEYWORD2
+boho_convert_hex	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

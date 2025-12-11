@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-size: 1.2em;
+      margin: 10px;
+    }
+
+    button {
+      padding: 15px;
+      margin: 5px;
+    }
+
+    #view1 {
+      width: 90%;
+    }
+    #view2 {
+      width: 90%;
+    }
+
+    img{
+      border: 2px solid rgb(159, 163, 163);
+    }
+  </style>
+  <title>IOSignal espcam browser</title>
+</head>
+
+<body>
+  <h3>ESP-CAM</h3>
+  <h5>Plain Image</h5>
+  <img id="view1" src="" class="cam_view">
+  <h5>End to End Encryption</h5>
+  <img id="view2" src="" class="cam_view">
+
+  <script src="https://cdn.jsdelivr.net/npm/iosignal@5.0.1/dist/io.min.js"></script>
+  <script>
+
+    let wsURL = 'wss://io.iosignal.net/ws'
+    let remote = new IO(wsURL)
+
+    remote.listen('#capture_image', imageReceiveHandler)
+    remote.listen('#e2e_cam', decrypt)
+
+    function decrypt(tag, ...args) {
+      console.log('>> receive decrypted image: ', args[0].byteLength)
+      let decoded = remote.decrypt_e2e( args[0] , 'XjK6608lG9ihqW8IrfLq')
+      if(decoded){
+        console.log('dec success')
+        let file = new Blob([decoded.data])
+        var imgURL = URL.createObjectURL(file)
+        view2.src = imgURL
+      }else{
+        console.log('dec fail')
+      }
+
+    }
+
+    function imageReceiveHandler(tag, ...args) {
+      console.log('>> receive image: ', args[0].byteLength)
+      let file = new Blob([args[0]])
+      var imgURL = URL.createObjectURL(file)
+      view1.src = imgURL
+    }
+
+
+
+  </script>
+</body>
+
+</html>

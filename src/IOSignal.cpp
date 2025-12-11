@@ -167,17 +167,18 @@ void IOSignal::loop()
     break;
   }
 
-  case Boho::MsgType::SERVER_TIME_NONCE: // SERVER_READY
+  case Boho::MsgType::SERVER_TIME_NONCE:
   {
     state = IO_SERVER_READY;
     if (useAuth)
     {
-      uint8_t authPack[MetaSize_SERVER_TIME_NONCE];
+      uint8_t authPack[MetaSize_AUTH_REQ];
       size_t auth_len = auth_req(authPack, message, len);
       send(authPack, auth_len);
     }
     else
     {
+      setClientTimeToServerTime(message, len);
       _buffer[0] = IOSignal::MsgType::CID_REQ;
       send(_buffer, 1);
     }
@@ -366,7 +367,7 @@ void IOSignal::subscribe(const char *tag)
   }
   else
   {
-    uint8_t *buf = (uint8_t *)dynamic_alloc(2 + tagLen);
+    buf = (uint8_t *)dynamic_alloc(2 + tagLen);
     if (buf == NULL)
       return;
   }
@@ -418,7 +419,7 @@ void IOSignal::signal(const char *tag)
   }
   else
   {
-    uint8_t *buf = (uint8_t *)dynamic_alloc(2 + tagLen);
+    buf = (uint8_t *)dynamic_alloc(2 + tagLen);
     if (buf == NULL)
       return;
   }
