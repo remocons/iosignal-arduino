@@ -57,7 +57,7 @@ void camera_setup() {
     // 캡처 해상도
     config.frame_size = FRAMESIZE_VGA;  // 640x480
     config.jpeg_quality = 10;           // 낮을수록 고화질(용량 큼)
-    config.fb_count = 1;
+    config.fb_count = 2;
 
     if (esp_camera_init(&config) != ESP_OK) {
         Serial.println("Camera init failed!");
@@ -66,7 +66,7 @@ void camera_setup() {
 }
 
 
-
+bool toggle = false;
 void sendFrameSignal() {
 
     camera_fb_t* fb = esp_camera_fb_get();
@@ -75,8 +75,12 @@ void sendFrameSignal() {
         return;
     }
 
-    io.signal("#capture_image", fb->buf , fb->len );
+    // if( toggle ) 
+    // io.signal("#capture_image", fb->buf , fb->len );
+    // if( toggle ) 
     io.signal_e2e("#e2e_cam", fb->buf , fb->len , "XjK6608lG9ihqW8IrfLq" );
+
+    // toggle = !toggle;
 
     Serial.print("Sent frame (");
     Serial.print(fb->len);
@@ -110,6 +114,7 @@ void setup() {
     // io.begin( &client , "192.168.0.204", 55488);
     io.onReady( &onReady );
     io.onMessage( &onMessage );
+    io.auth("cam.tJ9vxM/SNluw7qHMMICF");
 
 }
 
@@ -136,11 +141,14 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
 const int UTC9 = 3600 * 9; // KR
 // ====== LOOP ======
 uint32_t last = 0;
+uint32_t delta = 0;
 void loop() {
     io.loop();
-    if( millis() - last >= 100 ){
+    delta = millis() - last;
+    if( delta >= 50 ){
         last = millis();
         sendFrameSignal();
         boho_print_time( io.getUnixTime()+ UTC9, io.getMilTime());
+        Serial.print( delta);
     }
 }
