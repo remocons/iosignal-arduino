@@ -1,0 +1,33 @@
+{
+  "sync": [
+    "examples/esp01_channel_txrx/esp01_channel_txrx.ino",
+    "examples/esp32_channel_txrx/esp32_channel_txrx.ino",
+    "examples/esp32cam/esp32cam.ino",
+    "examples/esp32cam/index.html",
+    "examples/esp8266_channel_receiver/esp8266_channel_receiver.ino",
+    "examples/esp8266_channel_sender/esp8266_channel_sender.ino",
+    "examples/esp8266_channel_txrx/esp8266_channel_txrx.ino",
+    "examples/uno_ethernet_channel_receiver/uno_ethernet_channel_receiver.ino",
+    "examples/uno_ethernet_channel_sender/uno_ethernet_channel_sender.ino",
+    "examples/uno_ethernet_channel_txrx/uno_ethernet_channel_txrx.ino",
+    "examples/uno_r4_wifi_channel_receiver/uno_r4_wifi_channel_receiver.ino",
+    "examples/uno_r4_wifi_channel_receiver_txrx/uno_r4_wifi_channel_receiver_txrx.ino",
+    "examples/uno_r4_wifi_channel_sender/uno_r4_wifi_channel_sender.ino",
+    "keywords.txt",
+    "src/Boho.cpp",
+    "src/Boho.h",
+    "src/CongPacket.cpp",
+    "src/CongPacket.h",
+    "src/IOSignal.cpp",
+    "src/IOSignal.h"
+  ],
+  "local": [
+    ".gitignore",
+    "LICENSE",
+    "README.md",
+    "library.properties",
+    "AGENTS.md",
+    "scripts/public-files.json",
+    "scripts/verify.py"
+  ]
+}
