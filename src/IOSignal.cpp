@@ -4,6 +4,38 @@
 #include <string.h>
 #include "Client.h"
 
+namespace {
+// A null output measures the same encoding used by the write pass.
+// C strings end at NUL; UTF-8 bytes above the control range are preserved.
+bool encodeJsonString(const char *text, uint8_t *output, size_t &length)
+{
+  static const char hex[] = "0123456789abcdef";
+  length = 0;
+  for (const uint8_t *p = (const uint8_t *)text; *p; ++p)
+  {
+    const uint8_t c = *p;
+    const size_t width = c < 0x20 ? 6 : (c == '"' || c == '\\' ? 2 : 1);
+    if (width > (size_t)-1 - length) return false;
+    if (output)
+    {
+      uint8_t *dest = output + length;
+      if (c < 0x20)
+      {
+        dest[0] = '\\'; dest[1] = 'u'; dest[2] = '0'; dest[3] = '0';
+        dest[4] = hex[c >> 4]; dest[5] = hex[c & 0x0f];
+      }
+      else if (width == 2)
+      {
+        dest[0] = '\\'; dest[1] = c;
+      }
+      else dest[0] = c;
+    }
+    length += width;
+  }
+  return true;
+}
+} // namespace
+
 IOSignal::IOSignal()
 {
   state = IO_CLOSED;
@@ -365,7 +397,7 @@ void IOSignal::subscribe(const char *tag)
   }
   buf[0] = IOSignal::MsgType::SUBSCRIBE;
   buf[1] = tagLen;
-  strcpy((char *)buf + 2, tag);
+  memcpy(buf + 2, tag, tagLen); // Tag length is explicit; no NUL on the wire.
   send_enc_mode(buf, 2 + tagLen);
 
   if (!useDefaultBuffer)
@@ -404,21 +436,21 @@ void IOSignal::signal(const char *tag)
 
   uint8_t *buf = NULL;
 
-  bool useDefaultBuffer = (2 + tagLen) <= DEFAULT_TX_BUF_SIZE;
+  bool useDefaultBuffer = (3 + tagLen) <= DEFAULT_TX_BUF_SIZE;
   if (useDefaultBuffer)
   {
     buf = _buffer;
   }
   else
   {
-    buf = (uint8_t *)dynamic_alloc(2 + tagLen);
+    buf = (uint8_t *)dynamic_alloc(3 + tagLen);
     if (buf == NULL)
       return;
   }
 
   buf[0] = IOSignal::MsgType::SIGNAL;
   buf[1] = tagLen;
-  strcpy((char *)buf + 2, tag);
+  memcpy(buf + 2, tag, tagLen); // The following byte stores the payload type.
   buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::EMPTY;
   send_enc_mode(buf, 3 + tagLen);
 
@@ -460,47 +492,44 @@ void IOSignal::signal(const char *tag, const char *data)
     free(buf);
 }
 
-// siganl : two string payload.  PAYLOAD_TYPE::MJSON (JSON array )
+// Signal: two C strings encoded as a JSON array (MJSON).
 void IOSignal::signal(const char *tag, const char *data1, const char *data2)
 {
-  if ( state != IO_READY ) return;
-  int tagLen = strlen(tag);
-  if (tagLen > 255)
-    return;
+  if (state != IO_READY) return;
+  const size_t tagLen = strlen(tag);
+  if (tagLen > 255) return;
 
-  int data1Len = strlen(data1);
-  int data2Len = strlen(data2);
-  uint32_t dataLen = data1Len + data2Len + 7; // ["data1","data2"]
+  size_t data1Len, data2Len;
+  if (!encodeJsonString(data1, NULL, data1Len) ||
+      !encodeJsonString(data2, NULL, data2Len)) return;
 
-  uint8_t *buf = NULL;
-
-  bool useDefaultBuffer = (3 + tagLen + dataLen) <= DEFAULT_TX_BUF_SIZE;
-  if (useDefaultBuffer)
-  {
-    buf = _buffer;
-  }
-  else
-  {
-    buf = (uint8_t *)dynamic_alloc(3 + tagLen + dataLen);    
-    if (buf == NULL)
-      return;
-  }
+  // Seven JSON punctuation bytes plus the signal header and tag.
+  // Check size_t arithmetic before allocation, including on 16-bit boards.
+  const size_t fixedLen = 3 + tagLen + 7;
+  if (data1Len > (size_t)-1 - fixedLen ||
+      data2Len > (size_t)-1 - fixedLen - data1Len) return;
+  const size_t packetLen = fixedLen + data1Len + data2Len;
+  const bool useDefaultBuffer = packetLen <= DEFAULT_TX_BUF_SIZE;
+  uint8_t *buf = useDefaultBuffer ? _buffer : (uint8_t *)dynamic_alloc(packetLen);
+  if (buf == NULL) return;
 
   buf[0] = IOSignal::MsgType::SIGNAL;
   buf[1] = tagLen;
-  strcpy((char *)buf + 2, tag);
+  memcpy(buf + 2, tag, tagLen);
   buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::MJSON;
 
-  memcpy(buf + 3 + tagLen, "[\"", 2);
-  memcpy(buf + 3 + tagLen + 2, data1, data1Len);
-  memcpy(buf + 3 + tagLen + 2 + data1Len, "\",\"", 3);
-  memcpy(buf + 3 + tagLen + 2 + data1Len + 3, data2, data2Len);
-  memcpy(buf + 3 + tagLen + 2 + data1Len + 3 + data2Len, "\"]", 2);
+  uint8_t *dest = buf + 3 + tagLen;
+  *dest++ = '['; *dest++ = '"';
+  size_t written;
+  encodeJsonString(data1, dest, written);
+  dest += written;
+  *dest++ = '"'; *dest++ = ','; *dest++ = '"';
+  encodeJsonString(data2, dest, written);
+  dest += written;
+  *dest++ = '"'; *dest = ']';
 
-  send_enc_mode(buf, 3 + tagLen + dataLen);
-
-  if (!useDefaultBuffer)
-    free(buf);
+  send_enc_mode(buf, packetLen);
+  if (!useDefaultBuffer) free(buf);
 }
 
 // siganl : binary payload.
