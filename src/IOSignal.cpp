@@ -133,18 +133,10 @@ void IOSignal::loop()
 
     char *tagStr = (char *)message + 2;
     message[2 + tagLen] = 0; // add null string. end of tagStr string.
-    // If tagStr includes '@' charactor. it's uni-cast message.
-    char *directMessageTopic = strchr(tagStr, '@');
-    if (directMessageTopic)
-    {
-      if (messageCallback)
-        messageCallback(directMessageTopic, payloadType, message + 3 + tagLen, payloadLen);
-    }
-    else
-    {
-      if (messageCallback)
-        messageCallback(tagStr, payloadType, message + 3 + tagLen, payloadLen);
-    }
+    // The server already removes the destination CID from direct signals.
+    // Preserve publisher CIDs on subscribed signals, including self-subscriptions.
+    if (messageCallback)
+      messageCallback(tagStr, payloadType, message + 3 + tagLen, payloadLen);
     break;
   }
 
