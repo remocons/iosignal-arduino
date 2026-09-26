@@ -7,6 +7,7 @@ CongPacket::CongPacket()
 {
   _state = ReadingState::HEAD;
   _bufferIndex = 0;
+  _ready = false;
 }
 
 
@@ -131,6 +132,7 @@ void CongPacket::run()
 }
 
 void CongPacket::send(const uint8_t* buffer, uint32_t size ){
+  if (!buffer || !size) return;
 
   uint8_t header[5];
   uint8_t lenBytes = 1; 

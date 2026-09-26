@@ -14,8 +14,6 @@
     "examples/uno_r4_wifi_channel_receiver_txrx/uno_r4_wifi_channel_receiver_txrx.ino",
     "examples/uno_r4_wifi_channel_sender/uno_r4_wifi_channel_sender.ino",
     "keywords.txt",
-    "src/Boho.cpp",
-    "src/Boho.h",
     "src/CongPacket.cpp",
     "src/CongPacket.h",
     "src/IOSignal.cpp",

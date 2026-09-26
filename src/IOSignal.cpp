@@ -47,6 +47,7 @@ IOSignal::IOSignal()
 
 void IOSignal::loop()
 {
+  if (!client) return;
   refreshTime();
 
   if( !this->client->connected()){
@@ -76,7 +77,8 @@ void IOSignal::loop()
     return;
   } 
   
-  if (!cong.ready()) return; 
+  if (!cong.ready()) return;
+  if (!cong._buffer || !cong._payloadLength) { cong.clear(); return; }
 
   lastTxRxTime = getUnixTime();
 
@@ -94,8 +96,8 @@ void IOSignal::loop()
       return;
     }
 
-    uint32_t decLen = decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len);
-    if (decLen)
+    uint32_t decLen = 0;
+    if (decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len, decLen) && decLen)
     {
       message = tmpbuf;
       len = decLen;
@@ -116,8 +118,13 @@ void IOSignal::loop()
     */
 
     // Serial.println(F(">> E2"));
+    if (len < MetaSize_ENC_488) { cong.clear(); return; }
     memcpy(packetLength.buf, cong._buffer + 1, 4);
-    int encHeaderSize = packetLength.u32;
+    const uint32_t encHeaderSize = packetLength.u32;
+    if (encHeaderSize < 3 || encHeaderSize > len - MetaSize_ENC_488 ||
+        len - MetaSize_ENC_488 - encHeaderSize < MetaSize_ENC_PACK) {
+      cong.clear(); return;
+    }
     tmpbuf = (uint8_t *)dynamic_alloc(encHeaderSize);
 
     if (tmpbuf == NULL)
@@ -126,8 +133,10 @@ void IOSignal::loop()
       return;
     }
 
-    uint32_t decLen = decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len);
-    if (decLen)
+    uint32_t decLen = 0;
+    if (decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len, decLen) &&
+        decLen == encHeaderSize && tmpbuf[0] == IOSignal::MsgType::SIGNAL_E2E &&
+        (uint32_t)tmpbuf[1] + 3 == decLen)
     {
       memcpy(cong._buffer + 21, tmpbuf, encHeaderSize);
       message = cong._buffer + 21;
@@ -159,8 +168,9 @@ void IOSignal::loop()
   case IOSignal::MsgType::SIGNAL_E2E:
   case IOSignal::MsgType::SIGNAL:
   {
-    int tagLen = message[1];
-    int payloadLen = len - (tagLen + 3);
+    if (len < 3 || (uint32_t)message[1] > len - 3) break;
+    const uint8_t tagLen = message[1];
+    const uint32_t payloadLen = len - (tagLen + 3);
     uint8_t payloadType = message[2 + tagLen];
 
     char *tagStr = (char *)message + 2;
@@ -174,10 +184,10 @@ void IOSignal::loop()
 
   case IOSignal::MsgType::CID_RES:
   {
-    if (len >= 1 && len < MAX_CID_LEN)
+    if (len > 1 && len - 1 <= MAX_CID_LEN)
     {
       memcpy(cid, message + 1, len - 1);
-      cid[len] = 0;
+      cid[len - 1] = 0;
       state = IO_READY;
     }
     else
@@ -193,12 +203,16 @@ void IOSignal::loop()
 
   case Boho::MsgType::SERVER_TIME_NONCE:
   {
+    if (len != MetaSize_SERVER_TIME_NONCE) break;
+    u16buf2 ms;
+    memcpy(ms.buf, message + 5, 2);
+    if (ms.u16 >= 1000) break;
     state = IO_SERVER_READY;
     if (useAuth)
     {
       uint8_t authPack[MetaSize_AUTH_REQ];
       size_t auth_len = auth_req(authPack, message, len);
-      send(authPack, auth_len);
+      if (auth_len) send(authPack, auth_len);
     }
     else
     {
@@ -291,19 +305,15 @@ void IOSignal::begin(Client *client, const char *_host, uint16_t _port )
 
 void IOSignal::setRxBuffer(size_t size)
 {
-  // Serial.println(F("-- setRxBuffer: "));
-  if (_rx_buffer != nullptr) { // Free previous buffer if any
-      free(_rx_buffer);
-  }
-  _rx_buffer = (uint8_t *)dynamic_alloc(size);
-
-  if (_rx_buffer == NULL)
-  {
-    // Serial.println(F("\n-- NO RX_BUFFER!"));
-    return;
-  }
+  if (!size) return;
+  uint8_t *replacement = (uint8_t *)dynamic_alloc(size);
+  if (!replacement) return;
+  free(_rx_buffer);
+  _rx_buffer = replacement;
+  cong.clear();
   cong.setBufferSize(_rx_buffer, size);
 }
+
 
 void IOSignal::write(const uint8_t *buffer, uint32_t size)
 {
@@ -312,22 +322,25 @@ void IOSignal::write(const uint8_t *buffer, uint32_t size)
 
 void IOSignal::send(const uint8_t *buffer, uint32_t size)
 {
+  if (!buffer || !size) return;
   cong.send(buffer, size);
   lastTxRxTime = getUnixTime();
 }
 
 void IOSignal::send_enc_mode(const uint8_t *buf, uint32_t bufSize)
 {
+  if (!buf || !bufSize || bufSize > (uint32_t)((size_t)-1) - MetaSize_ENC_488) return;
   // useEncryption
   if (encMode == IOSignal::ENC_MODE::YES ||
       encMode == IOSignal::ENC_MODE::AUTO && isAuthorized)
   {
-    uint8_t *enc_buf = (uint8_t *)dynamic_alloc(bufSize + 25);
+    if (!isAuthorized) return;
+    uint8_t *enc_buf = (uint8_t *)dynamic_alloc(bufSize + MetaSize_ENC_488);
     if (enc_buf == NULL)
       return;
 
-    int packSize = encrypt_488(enc_buf, buf, bufSize);
-    send(enc_buf, packSize);
+    uint32_t packSize = encrypt_488(enc_buf, buf, bufSize);
+    if (packSize) send(enc_buf, packSize);
     free(enc_buf);
     // ('<<  [ENC_488]')
   }
@@ -353,11 +366,12 @@ void IOSignal::pong()
 
 void IOSignal::login(const char *auth_id, const char *auth_key)
 {
+  if (state != IO_SERVER_READY && state != IO_READY) return;
   // instance manual login.
   set_id8(auth_id);
   set_key(auth_key);
   size_t size = auth_req(_buffer);
-  send(_buffer, size);
+  if (size) send(_buffer, size);
 }
 
 void IOSignal::auth(const char *auth_id, const char *auth_key)
@@ -580,54 +594,27 @@ void IOSignal::signal2(const char *target, const char *topic, const uint8_t *dat
 
 void IOSignal::signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen, const char *dataKey)
 {
-  if ( state != IO_READY ) return;
-  int tagLen = strlen(tag);
-  if (tagLen > 255)
-    return;
-
-  uint8_t *buf = NULL;
-  int dataOffset = 0;
-
-  if (encMode == IOSignal::ENC_MODE::YES ||
-      encMode == IOSignal::ENC_MODE::AUTO && isAuthorized)
-  {
-    // enc_e2e(21) + sig_e2e(3+tagLen+ enc_pack_payload)
-
-    // encMode on:
-    // buf size: enc_e2e header(21) + IOSignalHeader( 3+tagLen) |  encpack(25) + dataLen
-    dataOffset = 21 + 3 + tagLen;
-    buf = (uint8_t *)dynamic_alloc(dataOffset + 25 + dataLen);
-    if (buf == NULL)
-      return;
-
-    uint8_t sigMsgHeader[3 + tagLen];
-    sigMsgHeader[0] = IOSignal::MsgType::SIGNAL_E2E; // for end receiver.
-    sigMsgHeader[1] = tagLen;
-    strcpy((char *)sigMsgHeader + 2, tag);
-    sigMsgHeader[2 + tagLen] = IOSignal::PAYLOAD_TYPE::BINARY;
-
-    // encrypt sigHeader only. exclude payload(already encrypted)
-    encrypt_488(buf, sigMsgHeader, 3 + tagLen);
-    // now fills 21+3+tagLen.
-    buf[0] = Boho::MsgType::ENC_E2E; // change type   .. for server
+  if (state != IO_READY || !tag || !dataKey || !*dataKey || (!data && dataLen)) return;
+  const size_t tagLen = strlen(tag);
+  if (tagLen > 255) return;
+  const bool encryptLink = encMode == ENC_MODE::YES || (encMode == ENC_MODE::AUTO && isAuthorized);
+  if (encryptLink && !isAuthorized) return;
+  const size_t headerLen = 3 + tagLen;
+  const size_t dataOffset = headerLen + (encryptLink ? MetaSize_ENC_488 : 0);
+  if (dataLen > (uint32_t)((size_t)-1) - dataOffset - MetaSize_ENC_PACK) return;
+  uint8_t *buf = (uint8_t *)dynamic_alloc(dataOffset + MetaSize_ENC_PACK + dataLen);
+  if (!buf) return;
+  uint8_t *header = buf;
+  header[0] = MsgType::SIGNAL_E2E;
+  header[1] = tagLen;
+  memcpy(header + 2, tag, tagLen);
+  header[2 + tagLen] = PAYLOAD_TYPE::BINARY;
+  if (encryptLink) {
+    if (encrypt_488(buf, header, headerLen) != dataOffset) { free(buf); return; }
+    buf[0] = Boho::MsgType::ENC_E2E;
   }
-  else
-  {
-    // encMode off:   IOSignalMsg Signal Header( 3+tagLen) | encpack(25) + dataLen
-    dataOffset = 3 + tagLen;
-    buf = (uint8_t *)dynamic_alloc(dataOffset + 25 + dataLen);
-    if (buf == NULL)
-      return;
-
-    // IOSignal Header
-    buf[0] = IOSignal::MsgType::SIGNAL_E2E;
-    buf[1] = tagLen; //  ch str len
-    strcpy((char *)buf + 2, tag);
-    buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::BINARY;
-  }
-
-  uint32_t e2ePackSize = encrypt_e2e(buf + dataOffset, data, dataLen, dataKey);
-  send(buf, dataOffset + e2ePackSize);
+  const uint32_t size = encrypt_e2e(buf + dataOffset, data, dataLen, dataKey);
+  if (size) send(buf, dataOffset + size);
   free(buf);
 }
 

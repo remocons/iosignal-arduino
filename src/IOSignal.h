@@ -4,7 +4,7 @@
 
 #include <Arduino.h>
 #include <CongPacket.h>
-#include "Boho.h"
+#include <Boho.h>
 #include "Client.h"
 
 #define DEFAULT_TX_BUF_SIZE 50
@@ -120,7 +120,7 @@ public:
   void login(const char *auth_id, const char *auth_key);
   void auth(const char *auth_id, const char *auth_key);
   void auth(const char *auth_id_key);
-  uint8_t useAuth;
+  uint8_t useAuth = false;
   void subscribe(const char *tag);
   void signal(const char *tag);
   void signal(const char *tag, const char *data);
@@ -138,22 +138,22 @@ public:
 
   uint8_t _buffer[DEFAULT_TX_BUF_SIZE];
   union u32buf4 packetLength;
-  char cid[MAX_CID_LEN + 1];
+  char cid[MAX_CID_LEN + 1] = {0};
   uint32_t lastTxRxTime = 0; // seconds
   uint32_t pingPeriod = 50;  // seconds
   uint8_t encMode = IOSignal::ENC_MODE::AUTO;
   uint8_t state;
 
   CongPacket cong;
-  Client *client;
-  const char *_host;
+  Client *client = nullptr;
+  const char *_host = nullptr;
   uint16_t _port = 55488L;
 
 private:
   uint8_t* _rx_buffer = nullptr;
-  void (*messageCallback)(char *, uint8_t, uint8_t *, size_t);
-  void (*readyCallback)(void);
-  void (*errorCallback)(uint8_t);
+  void (*messageCallback)(char *, uint8_t, uint8_t *, size_t) = nullptr;
+  void (*readyCallback)(void) = nullptr;
+  void (*errorCallback)(uint8_t) = nullptr;
 };
 
 #endif
