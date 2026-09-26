@@ -4,38 +4,6 @@
 #include <string.h>
 #include "Client.h"
 
-namespace {
-// A null output measures the same encoding used by the write pass.
-// C strings end at NUL; UTF-8 bytes above the control range are preserved.
-bool encodeJsonString(const char *text, uint8_t *output, size_t &length)
-{
-  static const char hex[] = "0123456789abcdef";
-  length = 0;
-  for (const uint8_t *p = (const uint8_t *)text; *p; ++p)
-  {
-    const uint8_t c = *p;
-    const size_t width = c < 0x20 ? 6 : (c == '"' || c == '\\' ? 2 : 1);
-    if (width > (size_t)-1 - length) return false;
-    if (output)
-    {
-      uint8_t *dest = output + length;
-      if (c < 0x20)
-      {
-        dest[0] = '\\'; dest[1] = 'u'; dest[2] = '0'; dest[3] = '0';
-        dest[4] = hex[c >> 4]; dest[5] = hex[c & 0x0f];
-      }
-      else if (width == 2)
-      {
-        dest[0] = '\\'; dest[1] = c;
-      }
-      else dest[0] = c;
-    }
-    length += width;
-  }
-  return true;
-}
-} // namespace
-
 IOSignal::IOSignal()
 {
   state = IO_CLOSED;
@@ -242,7 +210,7 @@ void IOSignal::loop()
       close(IOSignal::MsgType::SERVER_REDIRECT);
   
       char ipString[16];
-      sprintf(ipString,  "%d.%d.%d.%d\0", message[1], message[2], message[3], message[4]);
+      sprintf(ipString,  "%d.%d.%d.%d", message[1], message[2], message[3], message[4]);
       uint16_t port = (message[5] << 8 ) + message[6];
       
       if( this->client->connect( ipString , port ) ){
@@ -420,8 +388,10 @@ void IOSignal::subscribe(const char *tag)
 
 void IOSignal::signal2(const char *target, const char *topic, const char *data)
 {
-  int targetLen = strlen(target);
-  int topicLen = strlen(topic);
+  const size_t targetLen = strlen(target);
+  if (targetLen > 255) return;
+  const size_t topicLen = strlen(topic);
+  if (topicLen > 255 - targetLen) return;
   char tag[targetLen + topicLen + 1];
   memcpy(tag, target, targetLen);
   memcpy(tag + targetLen, topic, topicLen);
@@ -431,8 +401,10 @@ void IOSignal::signal2(const char *target, const char *topic, const char *data)
 
 void IOSignal::signal2(const char *target, const char *topic, const char *data1, const char *data2)
 {
-  int targetLen = strlen(target);
-  int topicLen = strlen(topic);
+  const size_t targetLen = strlen(target);
+  if (targetLen > 255) return;
+  const size_t topicLen = strlen(topic);
+  if (topicLen > 255 - targetLen) return;
   char tag[targetLen + topicLen + 1];
   memcpy(tag, target, targetLen);
   memcpy(tag + targetLen, topic, topicLen);
@@ -506,16 +478,16 @@ void IOSignal::signal(const char *tag, const char *data)
     free(buf);
 }
 
-// Signal: two C strings encoded as a JSON array (MJSON).
+// MJSON inputs must not contain double quotes, backslashes or control bytes.
+// UTF-8 bytes are copied unchanged; no JSON escaping is performed.
 void IOSignal::signal(const char *tag, const char *data1, const char *data2)
 {
   if (state != IO_READY) return;
   const size_t tagLen = strlen(tag);
   if (tagLen > 255) return;
 
-  size_t data1Len, data2Len;
-  if (!encodeJsonString(data1, NULL, data1Len) ||
-      !encodeJsonString(data2, NULL, data2Len)) return;
+  const size_t data1Len = strlen(data1);
+  const size_t data2Len = strlen(data2);
 
   // Seven JSON punctuation bytes plus the signal header and tag.
   // Check size_t arithmetic before allocation, including on 16-bit boards.
@@ -534,12 +506,11 @@ void IOSignal::signal(const char *tag, const char *data1, const char *data2)
 
   uint8_t *dest = buf + 3 + tagLen;
   *dest++ = '['; *dest++ = '"';
-  size_t written;
-  encodeJsonString(data1, dest, written);
-  dest += written;
+  memcpy(dest, data1, data1Len);
+  dest += data1Len;
   *dest++ = '"'; *dest++ = ','; *dest++ = '"';
-  encodeJsonString(data2, dest, written);
-  dest += written;
+  memcpy(dest, data2, data2Len);
+  dest += data2Len;
   *dest++ = '"'; *dest = ']';
 
   send_enc_mode(buf, packetLen);
@@ -583,8 +554,10 @@ void IOSignal::signal(const char *tag, const uint8_t *data, uint32_t dataLen)
 void IOSignal::signal2(const char *target, const char *topic, const uint8_t *data, uint32_t dataLen)
 {
   if ( state != IO_READY ) return;
-  int targetLen = strlen(target);
-  int topicLen = strlen(topic);
+  const size_t targetLen = strlen(target);
+  if (targetLen > 255) return;
+  const size_t topicLen = strlen(topic);
+  if (topicLen > 255 - targetLen) return;
   char tag[targetLen + topicLen + 1];
   memcpy(tag, target, targetLen);
   memcpy(tag + targetLen, topic, topicLen);
