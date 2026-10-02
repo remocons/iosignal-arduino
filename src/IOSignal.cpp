@@ -235,6 +235,8 @@ void IOSignal::loop()
     }
     else
     {
+      isAuthorized = false;
+      state = IO_AUTH_FAIL;
       if (errorCallback) {
           errorCallback( IO_AUTH_FAIL);
       }
@@ -244,6 +246,7 @@ void IOSignal::loop()
   }
 
   case Boho::MsgType::AUTH_FAIL:
+    isAuthorized = false;
     state = IO_AUTH_FAIL;
     // Serial.println(F(">> AUTH_FAIL"));
     if (errorCallback) {
