@@ -12,10 +12,25 @@ iosignal supports real-time communication between web browsers, node.js, and ard
 
 ## Boho dependency
 
-IOSignal uses the external **Boho 0.8.0 or later** Arduino library. Boho source
+IOSignal uses the external **Boho 0.9.0 or later** Arduino library. Boho source
 files are no longer bundled under `src/`. Install Boho and its Crypto dependency
 alongside IOSignal; keep only one installed Boho library to avoid stale copies.
 For local development before a release is available in Library Manager, install
 the updated `boho-arduino` library from its local folder or ZIP.
 
 The `depends` entry follows the [Arduino library specification](https://docs.arduino.cc/arduino-cli/library-specification/).
+
+
+## 5.1.1 clock correction dependency
+
+This version requires Boho 0.9.0 for gradual clock correction from verified
+server envelopes and outgoing time/counter reuse protection. IOSignal packet
+formats are unchanged. Reconnect when the server rejects an expired/reused
+challenge or a packet outside its clock window. Plain PING/PONG has no time sample.
+
+이 버전은 서버 암호문 기반 시계 보정과 송신 시간·카운터 재사용 방어를 위해
+Boho 0.9.0 이상을 사용합니다. 패킷 형식은 유지하며 서버가 challenge 만료·재사용
+또는 허용 시간 차이 초과로 종료하면 재연결합니다.
+
+Authentication failure also clears authorization before the error callback,
+including malformed AUTH_RES responses.
