@@ -54,7 +54,6 @@ void setup() {
 
   io.setRxBuffer( 200 );
   io.begin( &client , "io.iosignal.net", 55488);  
-  // io.begin( &client , "192.168.0.204", 55488);
   io.onReady( &onReady );
   io.onMessage( &onMessage );
 }

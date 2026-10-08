@@ -17,8 +17,12 @@ WiFiClient client;
 IOSignal io;
 
 void onMessage(char* tag, uint8_t type, uint8_t* payload, size_t) {
+  Serial.print("[RX] ");
+  Serial.println(tag);
   if (strcmp(tag, "@ping") == 0 && type == IOSignal::PAYLOAD_TYPE::TEXT) {
     io.signal2((const char*)payload, "@pong", io.cid);
+    Serial.print("[TX] @pong -> ");
+    Serial.println((const char*)payload);
   }
 }
 
@@ -34,7 +38,7 @@ void setup() {
   io.setRxBuffer(128);
   io.onReady(onReady);
   io.onMessage(onMessage);
-  io.begin(&client, "io.remocon.kr", 55488);
+  io.begin(&client, "io.iosignal.net", 55488);
 }
 
 void loop() {
