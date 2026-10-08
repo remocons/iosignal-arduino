@@ -34,3 +34,18 @@ Boho 1.0.0 이상을 사용합니다. 패킷 형식은 유지하며 서버가 ch
 
 Authentication failure also clears authorization before the error callback,
 including malformed AUTH_RES responses.
+
+## Peer ping/pong example
+
+Open `examples/peer_ping_pong/peer_ping_pong.ino` for ESP32 (including ESP32-C3)
+or ESP8266. Set the WiFi placeholders, compile/upload, and open Serial Monitor
+at 115200 baud to see the device CID. From a CLI on the same server, run
+`ping <arduino-cid>`; the CLI prints `pong (<arduino-cid>)`.
+
+The example only handles a direct `@ping` TEXT message in `onMessage()` and
+immediately sends `@pong` to the sender CID with its own CID as payload.
+It assumes the standard single, null-terminated TEXT CID payload sent by the CLI.
+It has no CID validation, serial command parser, response waiting or timeout.
+The library core and server `io.ping()` / `io.pong()` remain unchanged.
+No channel subscription is required. For local tests enable WebSocket (CLI) and
+CongSocket (Arduino) ports on the same server.
