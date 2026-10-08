@@ -39,8 +39,11 @@ including malformed AUTH_RES responses.
 
 Open `examples/peer_ping_pong/peer_ping_pong.ino` for ESP32 (including ESP32-C3)
 or ESP8266. Set the WiFi placeholders, compile/upload, and open Serial Monitor
-at 115200 baud to see the device CID. From a CLI on the same server, run
-`ping <arduino-cid>`; the CLI prints `pong (<arduino-cid>)`.
+at 115200 baud to see the device CID and received message tags (`[RX]`).
+A peer ping is answered immediately, then `[TX] @pong -> <sender-cid>` is logged.
+All Arduino examples connect to `io.iosignal.net:55488`. In the web CLI,
+run `open wss://io.iosignal.net/ws`, then `ping <arduino-cid>`;
+the CLI prints `pong (<arduino-cid>)`.
 
 The example only handles a direct `@ping` TEXT message in `onMessage()` and
 immediately sends `@pong` to the sender CID with its own CID as payload.
