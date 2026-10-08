@@ -17,7 +17,8 @@
     "src/CongPacket.cpp",
     "src/CongPacket.h",
     "src/IOSignal.cpp",
-    "src/IOSignal.h"
+    "src/IOSignal.h",
+    "examples/peer_ping_pong/peer_ping_pong.ino"
   ],
   "local": [
     ".gitignore",
