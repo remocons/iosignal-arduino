@@ -4,6 +4,10 @@
 
 The Arduino IOSignal library provides an Arduino client and example sources.
 
+<p align="center">
+  <img src="docs/assets/iosignal-ecosystem.png" alt="Server, CLI, Node.js, Arduino and remote web apps connected through IOSignal" width="720" />
+</p>
+
 ## IOSignal
 
 IOSignal supports real-time communication between web browsers, Node.js, and Arduino. It also provides secure authentication and encrypted communication. The server has a built-in signaling protocol, so it can be used without additional server programming.

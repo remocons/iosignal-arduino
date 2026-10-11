@@ -4,6 +4,10 @@
 
 Arduino IOSignal 라이브러리는 아두이노 클라이언트와 예제 소스를 제공합니다.
 
+<p align="center">
+  <img src="docs/assets/iosignal-ecosystem.png" alt="IOSignal로 연결되는 서버, CLI, Node.js, Arduino와 원격 제어 웹앱" width="720" />
+</p>
+
 ## IOSignal
 
 IOSignal은 웹브라우저, Node.js, Arduino 간의 실시간 통신을 지원합니다. 보안 인증과 암호화 통신도 제공합니다. 서버에 시그널링 프로토콜이 내장되어 있어 별도의 서버 프로그래밍 없이 사용할 수 있습니다.
