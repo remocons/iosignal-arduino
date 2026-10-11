@@ -9,3 +9,5 @@
 - Build representative Arduino boards and test device communication before release.
 - Do not push, tag or publish without an explicit user request.
 - Detailed agent-assisted work records belong in ../_iosignal-arduino/agent-work only.
+
+- Keep user documentation only in the public repository: README.md (Korean) and README.en.md (English), with reciprocal language links. Both are public-local policy entries, never synced from private. Do not recreate a private root README.

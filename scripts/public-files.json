@@ -24,6 +24,7 @@
     ".gitignore",
     "LICENSE",
     "README.md",
+    "README.en.md",
     "library.properties",
     "AGENTS.md",
     "scripts/public-files.json",
