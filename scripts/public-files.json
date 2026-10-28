@@ -18,7 +18,9 @@
     "src/CongPacket.h",
     "src/IOSignal.cpp",
     "src/IOSignal.h",
-    "examples/peer_ping_pong/peer_ping_pong.ino"
+    "examples/peer_ping_pong/peer_ping_pong.ino",
+    "examples/uno_ethernet_duplicate_login/uno_ethernet_duplicate_login.ino",
+    "examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino"
   ],
   "local": [
     ".gitignore",
