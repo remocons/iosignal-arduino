@@ -30,6 +30,7 @@ signal_e2e	KEYWORD2
 onMessage	KEYWORD2
 onReady	KEYWORD2
 onError	KEYWORD2
+setLog	KEYWORD2
 clear	KEYWORD2
 setRxBuffer	KEYWORD2
 

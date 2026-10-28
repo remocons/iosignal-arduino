@@ -9,6 +9,7 @@
 
 #define DEFAULT_TX_BUF_SIZE 50
 #define MAX_CID_LEN 12
+#define MAX_REASON_LEN 32
 
 # define IO_CONNECTING    0  // JS
 # define IO_OPEN          1
@@ -133,12 +134,15 @@ public:
   void onMessage(void (*messageCallback)(char *, uint8_t, uint8_t *, size_t));
   void onReady(void (*readyCallback)(void));
   void onError(void (*errorCallback)(uint8_t));
+  // Optional user-visible log, e.g. io.setLog([](const char *m) { Serial.println(m); });
+  void setLog(void (*logCallback)(const char *));
   void close(uint8_t reason);
   void clear(void);
 
   uint8_t _buffer[DEFAULT_TX_BUF_SIZE];
   union u32buf4 packetLength;
   char cid[MAX_CID_LEN + 1] = {0};
+  char lastReason[MAX_REASON_LEN + 1] = {0}; // server reason of the last AUTH_CLEAR
   uint32_t lastTxRxTime = 0; // seconds
   uint32_t pingPeriod = 50;  // seconds
   uint8_t encMode = IOSignal::ENC_MODE::AUTO;
@@ -154,6 +158,7 @@ private:
   void (*messageCallback)(char *, uint8_t, uint8_t *, size_t) = nullptr;
   void (*readyCallback)(void) = nullptr;
   void (*errorCallback)(uint8_t) = nullptr;
+  void (*logCallback)(const char *) = nullptr;
 };
 
 #endif

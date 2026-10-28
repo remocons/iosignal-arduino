@@ -16,6 +16,8 @@ IOSignal::IOSignal()
 void IOSignal::loop()
 {
   if (!client) return;
+  // Stopped by the server (AUTH_CLEAR). Call auth() and begin() again to restart.
+  if (state == IO_STOP) return;
   refreshTime();
 
   if( !this->client->connected()){
@@ -193,10 +195,30 @@ void IOSignal::loop()
 
   case IOSignal::MsgType::AUTH_CLEAR:
   {
+    // e.g. replaced by a duplicate login. Forget the credentials and stay stopped
+    // instead of reconnecting anonymously.
+    size_t reasonLen = 0;
+    for (uint32_t i = 1; i < len && reasonLen < MAX_REASON_LEN; i++)
+    {
+      char c = (char)message[i];
+      if (c < 0x20 || c > 0x7e) break;
+      lastReason[reasonLen++] = c;
+    }
+    lastReason[reasonLen] = 0;
     useAuth = false;
     clearAuth(); // Boho::clearAuth()
     if (tmpbuf != NULL) free(tmpbuf);
     close(IOSignal::MsgType::AUTH_CLEAR);
+    this->client->stop();
+    state = IO_STOP;
+    if (logCallback)
+    {
+      char line[24 + MAX_REASON_LEN + 22];
+      strcpy(line, "[IOSignal] AUTH_CLEAR: ");
+      strcat(line, reasonLen ? lastReason : "no reason");
+      strcat(line, " connection stopped.");
+      logCallback(line);
+    }
     if (errorCallback) {
         errorCallback( IO_AUTH_CLEAR);
     }
@@ -271,6 +293,7 @@ void IOSignal::begin(Client *client, const char *_host, uint16_t _port )
   cong.init(client);
   this->_host = _host;
   this->_port = _port;
+  if (state == IO_STOP) state = IO_CLOSED; // explicit restart after AUTH_CLEAR
 }
 
 
@@ -608,6 +631,11 @@ void IOSignal::onReady(void (*readyCallback)(void))
 void IOSignal::onError(void (*errorCallback)(uint8_t))
 {
   this->errorCallback = errorCallback;
+}
+
+void IOSignal::setLog(void (*logCallback)(const char *))
+{
+  this->logCallback = logCallback;
 }
 
 

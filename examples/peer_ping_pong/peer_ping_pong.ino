@@ -26,6 +26,11 @@ void onMessage(char* tag, uint8_t type, uint8_t* payload, size_t) {
   }
 }
 
+// Library messages, e.g. when a duplicate login stops this device.
+void printLog(const char* message) {
+  Serial.println(message);
+}
+
 void onReady() {
   Serial.print("CID: ");
   Serial.println(io.cid);
@@ -38,6 +43,7 @@ void setup() {
   io.setRxBuffer(128);
   io.onReady(onReady);
   io.onMessage(onMessage);
+  io.setLog(printLog);
   io.begin(&client, "io.iosignal.net", 55488);
 }
 
