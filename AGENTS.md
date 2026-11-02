@@ -3,7 +3,7 @@
 - Develop product changes in ../_iosignal-arduino, then use its promotion commands.
 - Never copy private directories, examples, npm files, agent-work or Git history here.
 - scripts/public-files.json is an exact allowlist. New public files need explicit review; no wildcards.
-- Maintain README, LICENSE and library.properties/version independently here.
+- Maintain README, LICENSE and library.properties/version independently here. The version matches the public iosignal release (from 9.0.0), together with iosignal-cli, remocon and remocon-arduino.
 - Before release run python3 scripts/verify.py and, in ../_iosignal-arduino, npm run public:verify.
 - Review the full public diff for confidential content; the scope audit does not detect arbitrary secrets in approved files.
 - Build representative Arduino boards and test device communication before release.

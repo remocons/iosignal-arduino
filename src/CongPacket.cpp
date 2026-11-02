@@ -62,8 +62,14 @@ void CongPacket::fill_len( uint8_t lenBytes )
       client->readBytes( packetLength.buf, lenBytes );
       _payloadLength = packetLength.u32;
 
-     if(  _payloadLength > _bufferSize || _payloadLength == 0){
+     if( _payloadLength == 0 ){
         _state = ReadingState::OVER_SIZE;
+     }else if( _payloadLength > _bufferSize ){
+        // Too large for the RX buffer (or no buffer): discard it and keep the connection.
+        _bufferIndex = 0;
+        _skipped = true;
+        _state = ReadingState::SKIP;
+        fill_skip();
      }else{
         _state = ReadingState::BODY;
         fill_body();
@@ -97,6 +103,16 @@ void CongPacket::fill_body()
 
 
 
+void CongPacket::fill_skip()
+{
+  while( _bufferIndex < _payloadLength && client->available() > 0 ){
+    client->read();
+    _bufferIndex++;
+  }
+  if( _bufferIndex == _payloadLength ) clear();
+}
+
+
 bool CongPacket::ready()
 {
   if( _ready ) return true;
@@ -124,6 +140,9 @@ void CongPacket::run()
       break;
     case ReadingState::BODY:
       fill_body();
+      break;
+    case ReadingState::SKIP:
+      fill_skip();
       break;
     default:
       // Serial.println("error: unknown congpacket _state");

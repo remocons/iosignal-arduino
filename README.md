@@ -2,7 +2,7 @@
 
 **한국어** | [English](README.en.md)
 
-Arduino IOSignal 라이브러리는 아두이노 클라이언트와 예제 소스를 제공합니다.
+Arduino IOSignal 라이브러리는 아두이노를 IOSignal 서버에 연결하는 클라이언트와 보드별 예제를 제공합니다.
 
 <p align="center">
   <img src="docs/assets/iosignal-ecosystem.png" alt="IOSignal로 연결되는 서버, CLI, Node.js, Arduino와 원격 제어 웹앱" width="720" />
@@ -10,7 +10,70 @@ Arduino IOSignal 라이브러리는 아두이노 클라이언트와 예제 소�
 
 ## IOSignal
 
-IOSignal은 웹브라우저, Node.js, Arduino 간의 실시간 통신을 지원합니다. 보안 인증과 암호화 통신도 제공합니다. 서버에 시그널링 프로토콜이 내장되어 있어 별도의 서버 프로그래밍 없이 사용할 수 있습니다.
+IOSignal은 웹브라우저, Node.js, Arduino 간의 실시간 통신을 지원합니다. 보안 인증과 암호화 통신도 제공합니다. 서버에 시그널링 프로토콜이 내장되어 있어 별도의 서버 프로그래밍 없이 사용할 수 있습니다. Arduino는 TCP 기반의 CongSocket으로 서버에 접속합니다(공개 서버 `io.iosignal.net:55488`).
+
+## 버전
+
+이 라이브러리는 **9.0.0**부터 공개 [iosignal](https://github.com/remocons/iosignal)과 같은 버전 번호를 씁니다. iosignal-cli, remocon CLI, [remocon-arduino](https://github.com/remocons/remocon-arduino)도 같은 번호를 씁니다. 같은 번호의 패키지는 함께 쓰도록 맞춘 조합입니다. 버전별 변경은 아래 [버전별 변경 사항](#버전별-변경-사항)을 참고하세요.
+
+## 설치
+
+1. Arduino IDE 라이브러리 매니저에서 `IOSignal`을 검색해 설치합니다. 의존 라이브러리 **Boho**(1.0.0 이상), **Crypto**, **Bounce2**도 함께 설치합니다.
+2. 라이브러리 매니저에 새 버전이 반영되기 전에는 [공개 저장소](https://github.com/remocons/iosignal-arduino)의 ZIP을 받아 **Sketch > Include Library > Add .ZIP Library**로 추가합니다.
+3. **File > Examples > IOSignal**에서 보드에 맞는 예제를 엽니다.
+
+지원 보드: UNO + W5100 Ethernet 실드, UNO R4 WiFi, ESP8266, ESP32(ESP32-C3 포함). 예제마다 대상 보드가 다르므로 폴더 이름을 확인하세요.
+
+## 기본 사용
+
+```cpp
+#include <WiFi.h>
+#include <IOSignal.h>
+
+WiFiClient client;
+IOSignal io;
+
+void onReady() {
+  Serial.println(io.cid);          // 서버가 발급한 CID
+  io.subscribe("#homeButton");     // 재접속할 때마다 ready에서 다시 구독
+}
+
+void onMessage(char *tag, uint8_t type, uint8_t *payload, size_t size) {
+  Serial.println(tag);
+}
+
+void setup() {
+  Serial.begin(115200);
+  // ... Wi-Fi 연결 ...
+  io.setRxBuffer(200);             // begin() 전에 호출
+  io.begin(&client, "io.iosignal.net", 55488);
+  io.onReady(onReady);
+  io.onMessage(onMessage);
+  // io.auth("ID_KEY");            // 인증을 쓸 때
+}
+
+void loop() {
+  io.loop();
+  // io.signal("#homeButton", "pressed");
+}
+```
+
+- `loop()`는 매 반복마다 호출합니다. 연결이 끊기면 3초 뒤 다시 접속합니다.
+- 송신: `signal(tag, ...)`(채널·CID 태그), `signal2(target, topic, ...)`(두 문자열을 이어 붙인 태그, 예: `signal2(cid, "@pong", ...)` → `cid@pong`), `signal_e2e()`(종단간 암호화).
+- 진단: `onError(callback)`은 오류 코드를, `setLog(callback)`은 사람이 읽을 수 있는 안내를 전달합니다.
+
+## RX 버퍼와 큰 메시지
+
+- `setRxBuffer(size)`는 한 번에 받을 수 있는 최대 프레임 크기를 정합니다. 호출하지 않으면 `begin()`이 **80바이트**를 할당합니다.
+- 버퍼 크기는 접속할 때(`CID_REQ`) 서버에 전달되므로 **`setRxBuffer()`는 `begin()` 전에** 호출하세요. IOSignal 9.0 서버는 이 크기보다 큰 메시지를 이 장치에 보내지 않습니다.
+- 버퍼보다 큰 프레임이 오면(예: 구 서버) 연결을 끊지 않고 그 프레임만 건너뜁니다. 이때 `onError(CongPacket::OVER_SIZE)`(254)와 `setLog` 안내가 한 번 전달됩니다.
+- 송신 크기는 서버의 쿼터를 따릅니다. 서버가 보내는 `QUOTA` 메시지는 무시합니다.
+
+## 인증과 중복 로그인
+
+- `auth("ID.KEY")` 또는 `auth(id, key)`로 인증 정보를 설정하면 접속할 때마다 로그인합니다. 인증 실패 시 인증 상태를 해제한 뒤 `onError`를 호출합니다.
+- 같은 ID로 다른 장치가 로그인해 서버가 이 연결을 교체하면(`AUTH_CLEAR`), 인증 정보를 지우고 **`IO_STOP` 상태로 멈춥니다**. 익명으로 다시 접속하지 않습니다. 사유는 `io.lastReason`과 `setLog`로 확인하고, 다시 시작하려면 `auth()`와 `begin()`을 호출합니다.
+- 예제: [uno_ethernet_duplicate_login](examples/uno_ethernet_duplicate_login/uno_ethernet_duplicate_login.ino), [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). 서버의 중복 로그인 정책은 [서버 인증 설정](https://iosignal.net/docs/server/authentication#duplicate-login)을 참고하세요.
 
 ## 문서와 관련 패키지
 
@@ -29,17 +92,9 @@ IOSignal은 웹브라우저, Node.js, Arduino 간의 실시간 통신을 지원�
 
 ## Boho 의존성
 
-IOSignal은 외부 Arduino 라이브러리인 **Boho 1.0.0 이상**을 사용합니다. Boho 소스는 더 이상 `src/`에 포함되지 않습니다. IOSignal과 함께 Boho 및 Boho의 의존 라이브러리인 Crypto를 설치하세요. 오래된 사본이 사용되지 않도록 Boho는 하나만 설치해 두세요.
+IOSignal은 외부 Arduino 라이브러리인 **Boho 1.0.0 이상**을 사용합니다. Boho 소스는 `src/`에 포함되지 않습니다. IOSignal과 함께 Boho 및 Boho의 의존 라이브러리인 Crypto를 설치하세요. 오래된 사본이 사용되지 않도록 Boho는 하나만 설치해 두세요.
 
-새 릴리스가 라이브러리 매니저에 등록되기 전에 로컬에서 개발하려면, 업데이트된 `boho-arduino` 라이브러리를 로컬 폴더 또는 ZIP으로 설치하세요.
-
-`depends` 항목은 [Arduino 라이브러리 규격](https://docs.arduino.cc/arduino-cli/library-specification/)을 따릅니다.
-
-## 6.0.0 버전의 시계 보정 의존성
-
-이 버전은 검증된 서버 암호화 패킷을 통한 점진적 시계 보정과 송신 시간·카운터 재사용 방어를 위해 Boho 1.0.0 이상을 사용합니다. IOSignal 패킷 형식은 바뀌지 않습니다. 서버가 만료되거나 재사용된 인증 챌린지 또는 허용 시간 범위를 벗어난 패킷을 거부하면 재연결하세요. 평문 PING/PONG에는 시계 보정용 시간 샘플이 없습니다.
-
-인증 실패 시에는 오류 콜백을 호출하기 전에 인증 상태를 해제합니다. 잘못된 형식의 `AUTH_RES` 응답도 여기에 포함됩니다.
+새 릴리스가 라이브러리 매니저에 등록되기 전에 로컬에서 개발하려면, 업데이트된 `boho-arduino` 라이브러리를 로컬 폴더 또는 ZIP으로 설치하세요. `depends` 항목은 [Arduino 라이브러리 규격](https://docs.arduino.cc/arduino-cli/library-specification/)을 따릅니다.
 
 ## 장치 간 ping/pong 예제
 
@@ -49,4 +104,30 @@ ESP32(ESP32-C3 포함) 또는 ESP8266에서 [peer_ping_pong 예제](examples/pee
 
 이 예제는 `onMessage()`에서 직접 전달된 `@ping` TEXT 메시지만 처리합니다. 자신의 CID를 본문으로 담아 송신자 CID에 `@pong`을 즉시 보냅니다. CLI가 보내는 표준 형식인 단일 NUL 종단 TEXT CID 본문을 전제로 합니다.
 
-CID 검증, 시리얼 명령 파서, 응답 대기 또는 시간 초과 처리는 포함하지 않습니다. 라이브러리 코어와 서버의 `io.ping()` / `io.pong()`은 변경되지 않습니다. 채널 구독도 필요하지 않습니다. 로컬 테스트에서는 같은 서버에서 WebSocket(CLI) 포트와 CongSocket(Arduino) 포트를 활성화하세요.
+CID 검증, 시리얼 명령 파서, 응답 대기 또는 시간 초과 처리는 포함하지 않습니다. 채널 구독도 필요하지 않습니다. 로컬 테스트에서는 같은 서버에서 WebSocket(CLI) 포트와 CongSocket(Arduino) 포트를 활성화하세요.
+
+## 버전별 변경 사항
+
+### 9.0.0
+
+- **버전 번호를 공개 iosignal과 맞췄습니다.** 7.0.0 다음 버전이며 8.x는 없습니다. iosignal 9.0 서버의 기능(RX 크기 광고, `QUOTA`)에 맞췄으며, 8.x 서버에도 그대로 접속합니다.
+- RX 버퍼를 지정하지 않으면 `begin()`이 80바이트를 할당합니다. 이전에는 `setRxBuffer()`를 부르지 않으면 초기화되지 않은 버퍼를 쓸 수 있었습니다.
+- `CID_REQ`에 RX 버퍼 크기를 실어 보냅니다. 9.0 서버는 이보다 큰 메시지를 보내지 않으며, 구 서버는 추가된 값을 무시합니다. `setRxBuffer()`는 `begin()` 전에 호출해야 합니다.
+- 버퍼보다 큰 프레임은 연결을 끊지 않고 건너뜁니다. 이전에는 연결을 끊고 다시 접속했기 때문에, 구독한 채널에 큰 retain 메시지가 있으면 재접속이 반복됐습니다. `onError(CongPacket::OVER_SIZE)`(254)는 이제 연결 종료가 아니라 "건너뜀" 알림입니다. 길이 0 프레임은 지금처럼 연결을 끊습니다.
+- 9.0 서버의 `QUOTA`(0xC6) 메시지를 인식하고 무시합니다. `IOSignal::MsgType::QUOTA_LEVEL`(0xC3) 상수는 없어졌습니다.
+- 예제 `esp32cam`의 웹 페이지가 `iosignal@9.0.0` 브라우저 클라이언트를 씁니다.
+
+### 7.0.0
+
+- 서버가 `AUTH_CLEAR`를 보내면(예: 같은 ID의 새 로그인으로 교체) 인증 정보를 지우고 `IO_STOP` 상태로 멈춥니다. 6.x는 인증 정보를 지운 뒤 익명으로 다시 접속했습니다.
+- `setLog(callback)`과 `lastReason`으로 사유를 확인할 수 있습니다.
+- 중복 로그인 예제 `uno_ethernet_duplicate_login`, `esp32c3_duplicate_login`을 추가했습니다.
+
+### 6.0.0
+
+- 검증된 서버 암호화 패킷을 통한 점진적 시계 보정과 송신 시간·카운터 재사용 방어를 위해 Boho 1.0.0 이상을 사용합니다. IOSignal 패킷 형식은 바뀌지 않습니다. 서버가 만료되거나 재사용된 인증 챌린지 또는 허용 시간 범위를 벗어난 패킷을 거부하면 재연결하세요. 평문 PING/PONG에는 시계 보정용 시간 샘플이 없습니다.
+- 인증 실패 시에는 오류 콜백을 호출하기 전에 인증 상태를 해제합니다. 잘못된 형식의 `AUTH_RES` 응답도 여기에 포함됩니다.
+
+## 라이선스
+
+[MIT License](LICENSE)

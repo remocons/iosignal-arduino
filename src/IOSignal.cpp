@@ -37,6 +37,11 @@ void IOSignal::loop()
   }
 
   cong.run();
+  if (cong._skipped) {
+    cong._skipped = false;
+    if (logCallback) logCallback("[IOSignal] RX frame larger than the RX buffer: skipped.");
+    if (errorCallback) errorCallback(CongPacket::OVER_SIZE);
+  }
   if(cong._state >= 250){
     if (errorCallback) {
         errorCallback(cong._state);
@@ -187,8 +192,7 @@ void IOSignal::loop()
     else
     {
       setClientTimeToServerTime(message, len);
-      _buffer[0] = IOSignal::MsgType::CID_REQ;
-      send(_buffer, 1);
+      sendCidReq();
     }
     break;
   }
@@ -252,8 +256,7 @@ void IOSignal::loop()
     if (verify_auth_res(message, len))
     {
       // Serial.println(F(">> AUTH_RES"));
-      _buffer[0] = IOSignal::MsgType::CID_REQ;
-      send(_buffer, 1);
+      sendCidReq();
     }
     else
     {
@@ -291,6 +294,7 @@ void IOSignal::begin(Client *client, const char *_host, uint16_t _port )
 {
   this->client = client;
   cong.init(client);
+  if (!_rx_buffer) setRxBuffer(DEFAULT_RX_BUF_SIZE);
   this->_host = _host;
   this->_port = _port;
   if (state == IO_STOP) state = IO_CLOSED; // explicit restart after AUTH_CLEAR
@@ -306,6 +310,17 @@ void IOSignal::setRxBuffer(size_t size)
   _rx_buffer = replacement;
   cong.clear();
   cong.setBufferSize(_rx_buffer, size);
+}
+
+
+// CID_REQ carries the RX buffer size (uint32 little endian), so the server does not send larger
+// messages. Servers without this feature ignore the extra bytes.
+void IOSignal::sendCidReq()
+{
+  uint32_t size = cong._bufferSize;
+  _buffer[0] = IOSignal::MsgType::CID_REQ;
+  for (uint8_t i = 0; i < 4; i++) _buffer[1 + i] = (uint8_t)(size >> (8 * i));
+  send(_buffer, 5);
 }
 
 

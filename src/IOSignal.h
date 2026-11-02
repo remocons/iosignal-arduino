@@ -8,6 +8,7 @@
 #include "Client.h"
 
 #define DEFAULT_TX_BUF_SIZE 50
+#define DEFAULT_RX_BUF_SIZE 80 // used by begin() when setRxBuffer() was not called
 #define MAX_CID_LEN 12
 #define MAX_REASON_LEN 32
 
@@ -51,9 +52,10 @@ public:
     SERVER_READY = 0xC0,
     CID_REQ = 0xC1,
     CID_RES = 0xC2,
-    QUOTA_LEVEL = 0xC3,
+    // 0xC3: QUOTA_LEVEL before 9.0, not reused.
     AUTH_CLEAR = 0xC4,
     SERVER_REDIRECT = 0xC5,
+    QUOTA = 0xC6, // u32 LE maxMessageBytes; ignored (the RX buffer size is sent in CID_REQ)
     // ..
     LOOP = 0xCB,
     ECHO = 0xCC,
@@ -112,6 +114,8 @@ public:
 
   void loop();
   void begin(Client *client, const char *_host, uint16_t _port);
+  // Largest frame this client receives; larger ones are skipped (onError: CongPacket::OVER_SIZE).
+  // The size is sent to the server with CID_REQ, so call it before begin().
   void setRxBuffer(size_t size);
   void write(const uint8_t *buffer, uint32_t size);
   void send(const uint8_t *buffer, uint32_t size);
@@ -155,6 +159,7 @@ public:
 
 private:
   uint8_t* _rx_buffer = nullptr;
+  void sendCidReq();
   void (*messageCallback)(char *, uint8_t, uint8_t *, size_t) = nullptr;
   void (*readyCallback)(void) = nullptr;
   void (*errorCallback)(uint8_t) = nullptr;

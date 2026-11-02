@@ -25,6 +25,7 @@ class CongPacket
     LEN4 = 4,
     BODY = 5,
     READY = 6,
+    SKIP = 7,  // discarding the body of a frame larger than the RX buffer
     // From 0xFA(250) connection will be disconnected. 
     UNKNOWN_TYPE = 253,
     OVER_SIZE = 254,
@@ -32,22 +33,25 @@ class CongPacket
   };
 
   CongPacket();
-  Stream *client;
   void init( Stream * _client);
   void run();
   void drop();
   void fill_head();
   void fill_len( uint8_t lenBytes );
   void fill_body();
+  void fill_skip();
   bool ready();
   void clear();
   void setBufferSize(uint8_t * buf, size_t size);
   void send(const uint8_t* buffer, uint32_t size );
-  uint8_t * _buffer;
-  size_t _bufferSize;
-  size_t _bufferIndex;
-  size_t _payloadLength;
+  Stream *client = nullptr;
+  uint8_t * _buffer = nullptr;
+  size_t _bufferSize = 0;
+  size_t _bufferIndex = 0;
+  size_t _payloadLength = 0;
   bool _ready {false};
+  // Set when a frame larger than the RX buffer starts being skipped; the owner reports and resets it.
+  bool _skipped {false};
   uint8_t _state;
   union U32_BUF packetLength;
 };
