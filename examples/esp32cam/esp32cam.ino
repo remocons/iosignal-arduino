@@ -78,7 +78,7 @@ void sendFrameSignal() {
     // if( toggle ) 
     // io.signal("#capture_image", fb->buf , fb->len );
     // if( toggle ) 
-    io.signal_e2e("#e2e_cam", fb->buf , fb->len , "XjK6608lG9ihqW8IrfLq" );
+    io.signal_e2e("#e2e_cam", fb->buf , fb->len , "YOUR_E2E_KEY" );
 
     // toggle = !toggle;
 

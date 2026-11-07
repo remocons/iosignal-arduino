@@ -48,7 +48,7 @@
 
     function decrypt(tag, ...args) {
       console.log('>> receive decrypted image: ', args[0].byteLength)
-      let decoded = remote.decrypt_e2e( args[0] , 'XjK6608lG9ihqW8IrfLq')
+      let decoded = remote.decrypt_e2e( args[0] , 'YOUR_E2E_KEY')
       if(decoded){
         console.log('dec success')
         let file = new Blob([decoded.data])
