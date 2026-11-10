@@ -150,8 +150,8 @@ void CongPacket::run()
   }
 }
 
-void CongPacket::send(const uint8_t* buffer, uint32_t size ){
-  if (!buffer || !size) return;
+bool CongPacket::send(const uint8_t* buffer, uint32_t size ){
+  if (!buffer || !size) return true;
 
   uint8_t header[5];
   uint8_t lenBytes = 1; 
@@ -163,7 +163,7 @@ void CongPacket::send(const uint8_t* buffer, uint32_t size ){
     header[1] = size;
     header[2] = buffer[0];
     if( size == 2 )header[3] = buffer[1];
-    client->write( header, size + 2  );
+    return client->write( header, size + 2 ) == size + 2;
 
   }else{
     packetLength.u32 = size;
@@ -179,9 +179,9 @@ void CongPacket::send(const uint8_t* buffer, uint32_t size ){
     }
     //packet header
     memcpy( header + 1, packetLength.buf , lenBytes );
-    client->write( header, lenBytes + 1 );
+    if (client->write( header, lenBytes + 1 ) != (size_t)(lenBytes + 1)) return false;
     //payload
-    client->write( buffer, size );
+    return client->write( buffer, size ) == size;
   }
 }
 

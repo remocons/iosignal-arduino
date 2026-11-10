@@ -43,7 +43,8 @@ class CongPacket
   bool ready();
   void clear();
   void setBufferSize(uint8_t * buf, size_t size);
-  void send(const uint8_t* buffer, uint32_t size );
+  // Returns false when the client did not take every byte (a stalled or broken connection).
+  bool send(const uint8_t* buffer, uint32_t size );
   Stream *client = nullptr;
   uint8_t * _buffer = nullptr;
   size_t _bufferSize = 0;

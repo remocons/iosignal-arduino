@@ -332,7 +332,15 @@ void IOSignal::write(const uint8_t *buffer, uint32_t size)
 void IOSignal::send(const uint8_t *buffer, uint32_t size)
 {
   if (!buffer || !size) return;
-  cong.send(buffer, size);
+  if (!cong.send(buffer, size)) {
+    // A write that did not go out means the connection is stalled (e.g. the socket waited
+    // its full timeout) or gone. Drop it so loop() reconnects, instead of blocking on
+    // every later write while still looking connected.
+    if (logCallback) logCallback("[IOSignal] send failed: reconnecting.");
+    if (client) client->stop();
+    state = IO_CLOSED;
+    return;
+  }
   lastTxRxTime = getUnixTime();
 }
 
@@ -401,6 +409,17 @@ void IOSignal::auth(const char *id_key)
 
 void IOSignal::subscribe(const char *tag)
 {
+  sendTagPacket(IOSignal::MsgType::SUBSCRIBE, tag);
+}
+
+void IOSignal::unsubscribe(const char *tag)
+{
+  sendTagPacket(IOSignal::MsgType::UNSUBSCRIBE, tag);
+}
+
+// [msgType][tagLen][tag]: the SUBSCRIBE and UNSUBSCRIBE packet.
+void IOSignal::sendTagPacket(uint8_t msgType, const char *tag)
+{
   if ( state != IO_READY ) return;
   int tagLen = strlen(tag);
   if (tagLen > 255)
@@ -418,7 +437,7 @@ void IOSignal::subscribe(const char *tag)
     if (buf == NULL)
       return;
   }
-  buf[0] = IOSignal::MsgType::SUBSCRIBE;
+  buf[0] = msgType;
   buf[1] = tagLen;
   memcpy(buf + 2, tag, tagLen); // Tag length is explicit; no NUL on the wire.
   send_enc_mode(buf, 2 + tagLen);

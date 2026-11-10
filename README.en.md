@@ -108,6 +108,12 @@ It does not validate CIDs, parse serial commands or handle response waits or tim
 
 ## Changes by version
 
+### 9.6.0
+
+- **The version number now matches the public iosignal 9.6.0 package.**
+- Added `unsubscribe(tag)`. It stops receiving a tag subscribed with `subscribe()`. Several tags can be given separated by commas, and an empty string (the default) removes every subscription.
+- When a write does not send every byte (a stalled or broken socket), the client closes the connection and `loop()` reconnects. Previously the client could still look connected while every later write waited for the socket timeout. With `setLog()`, it prints `[IOSignal] send failed: reconnecting.`
+
 ### 9.0.0
 
 - **The version number now matches the public iosignal package.** This release follows 7.0.0; there is no 8.x. It supports the iosignal 9.0 server features (RX size advertisement, `QUOTA`) and still connects to 8.x servers.

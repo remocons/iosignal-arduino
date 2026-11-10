@@ -127,6 +127,9 @@ public:
   void auth(const char *auth_id_key);
   uint8_t useAuth = false;
   void subscribe(const char *tag);
+  // Stops receiving a tag subscribed with subscribe(). Comma-separated tags are allowed.
+  // An empty tag unsubscribes from everything.
+  void unsubscribe(const char *tag = "");
   void signal(const char *tag);
   void signal(const char *tag, const char *data);
   void signal(const char *tag, const char *data1, const char *data2);
@@ -160,6 +163,7 @@ public:
 private:
   uint8_t* _rx_buffer = nullptr;
   void sendCidReq();
+  void sendTagPacket(uint8_t msgType, const char *tag);
   void (*messageCallback)(char *, uint8_t, uint8_t *, size_t) = nullptr;
   void (*readyCallback)(void) = nullptr;
   void (*errorCallback)(uint8_t) = nullptr;

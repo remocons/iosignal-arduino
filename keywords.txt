@@ -24,6 +24,7 @@ close	KEYWORD2
 login	KEYWORD2
 auth	KEYWORD2
 subscribe	KEYWORD2
+unsubscribe	KEYWORD2
 signal	KEYWORD2
 signal2	KEYWORD2
 signal_e2e	KEYWORD2
