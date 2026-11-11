@@ -1,6 +1,6 @@
 
 /*
-  Arduino Uno R3 + Ethernet shield W5100 + LED
+  Arduino Uno R3 + Ethernet shield W5100 + LED + Button
 
   https://github.com/remocons/iosignal-arduino
   

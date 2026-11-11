@@ -1,5 +1,5 @@
 /*
-  ESP8266 General or D1 mini + LED
+  ESP8266 (General, D1 mini) or ESP32 module + LED + Button
 
   https://github.com/remocons/iosignal-arduino
 
@@ -18,12 +18,21 @@
     5. 모던 웹브라우저로  http://test.iosignal.net 에 접속하세요.
  */
 
-#include <ESP8266WiFi.h>
+#if defined(ESP8266)
+ #include <ESP8266WiFi.h>
+ #define BOARD_NAME "esp8266"
+ #define BUTTON_PIN 14
+#elif defined(ESP32)
+ #include <WiFi.h>
+ #define BOARD_NAME "esp32"
+ #define BUTTON_PIN 12
+#else
+ #error "Select an ESP8266 or ESP32 board for this example."
+#endif
 #include <IOSignal.h>
 #include <Bounce2.h>
 
-#define LED_PIN    2
-#define BUTTON_PIN   14
+#define LED_PIN 2
 
 WiFiClient client;
 IOSignal io;
@@ -92,6 +101,6 @@ void loop() {
     downBtn.update();
     if (downBtn.pressed()) {
         Serial.println("down");
-        io.signal("#homeButton","esp8266");
+        io.signal("#homeButton", BOARD_NAME);
     }    
 }

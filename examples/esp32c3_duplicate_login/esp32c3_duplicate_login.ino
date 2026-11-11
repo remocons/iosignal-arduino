@@ -8,8 +8,7 @@
     2. Arduino IDE: board "ESP32C3 Dev Module", "USB CDC On Boot: Enabled" so Serial
        prints over the USB port. Upload and open the Serial Monitor at 115200 baud.
     3. Wait for "READY cid: ...". The on-board LED (GPIO 8, active low) turns on.
-    4. Log in elsewhere with the same ID_KEY: a second board running this sketch or the
-       Uno example, or
+    4. Log in elsewhere with the same ID_KEY: a second board running this sketch, or
          io-client --auth-idKey did.key   (iosignal-cli, pointed at the same server)
     5. keepNew server (IOSignal 7.3.0+ default): this board is replaced and prints
          [IOSignal] AUTH_CLEAR: duplicate login. connection stopped.
@@ -24,7 +23,7 @@
     2. Arduino IDE에서 보드 "ESP32C3 Dev Module", "USB CDC On Boot: Enabled"를 선택해야
        USB로 시리얼 출력이 보입니다. 업로드 후 시리얼 모니터(115200)를 엽니다.
     3. "READY cid: ..."가 나오면 보드 LED(GPIO 8, active low)가 켜집니다.
-    4. 같은 ID_KEY로 다른 곳에서 로그인합니다. 이 예제나 Uno 예제를 올린 다른 보드 또는
+    4. 같은 ID_KEY로 다른 곳에서 로그인합니다. 이 예제를 올린 다른 보드 또는
          io-client --auth-idKey did.key   (같은 서버에 접속)
     5. keepNew 서버(IOSignal 7.3.0 이상 기본값): 이 보드가 교체되며 위 오류를 출력하고
        멈춘 채 LED가 깜빡입니다. BOOT 버튼(GPIO 9)을 누르거나 시리얼 모니터에서 'r'을 보내거나
