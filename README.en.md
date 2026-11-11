@@ -108,6 +108,12 @@ It does not validate CIDs, parse serial commands or handle response waits or tim
 
 ## Changes by version
 
+### 9.12.0
+
+- **The version number now matches the public iosignal 9.12.0 package.** The library code (`src`) is the same as 9.6.0.
+- Overlapping examples were removed. The `_channel_sender` and `_channel_receiver` examples for `esp8266`, `uno_ethernet` and `uno_r4_wifi` are replaced by the `_channel_txrx` example of the same board, `esp32_channel_txrx` by `esp8266_channel_txrx` (which now builds for ESP8266 and ESP32), and `uno_ethernet_duplicate_login` by `esp32c3_duplicate_login`.
+- Parts, wiring, steps and a browser panel for each example are on [test.iosignal.net](https://test.iosignal.net/) (Korean).
+
 ### 9.6.0
 
 - **The version number now matches the public iosignal 9.6.0 package.**

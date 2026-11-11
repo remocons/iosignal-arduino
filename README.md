@@ -108,6 +108,12 @@ CID 검증, 시리얼 명령 파서, 응답 대기 또는 시간 초과 처리�
 
 ## 버전별 변경 사항
 
+### 9.12.0
+
+- **버전 번호를 공개 iosignal 9.12.0과 맞췄습니다.** 라이브러리 코드(`src`)는 9.6.0과 같습니다.
+- 겹치는 예제를 정리했습니다. `esp8266`·`uno_ethernet`·`uno_r4_wifi`의 `_channel_sender`, `_channel_receiver`는 같은 보드의 `_channel_txrx`가, `esp32_channel_txrx`는 ESP8266과 ESP32를 함께 지원하는 `esp8266_channel_txrx`가, `uno_ethernet_duplicate_login`은 `esp32c3_duplicate_login`이 대신합니다.
+- 예제별 준비물, 배선, 순서와 브라우저 실습은 [test.iosignal.net](https://test.iosignal.net/)에 있습니다.
+
 ### 9.6.0
 
 - **버전 번호를 공개 iosignal 9.6.0과 맞췄습니다.**
