@@ -73,7 +73,7 @@ void loop() {
 
 - `auth("ID.KEY")` 또는 `auth(id, key)`로 인증 정보를 설정하면 접속할 때마다 로그인합니다. 인증 실패 시 인증 상태를 해제한 뒤 `onError`를 호출합니다.
 - 같은 ID로 다른 장치가 로그인해 서버가 이 연결을 교체하면(`AUTH_CLEAR`), 인증 정보를 지우고 **`IO_STOP` 상태로 멈춥니다**. 익명으로 다시 접속하지 않습니다. 사유는 `io.lastReason`과 `setLog`로 확인하고, 다시 시작하려면 `auth()`와 `begin()`을 호출합니다.
-- 예제: [uno_ethernet_duplicate_login](examples/uno_ethernet_duplicate_login/uno_ethernet_duplicate_login.ino), [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). 서버의 중복 로그인 정책은 [서버 인증 설정](https://iosignal.net/docs/server/authentication#duplicate-login)을 참고하세요.
+- 예제: [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). 서버의 중복 로그인 정책은 [서버 인증 설정](https://iosignal.net/docs/server/authentication#duplicate-login)을 참고하세요.
 
 ## 문서와 관련 패키지
 

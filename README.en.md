@@ -73,7 +73,7 @@ void loop() {
 
 - Set credentials with `auth("ID.KEY")` or `auth(id, key)`, and the client logs in on every connection. On an authentication failure it clears the authentication state before calling `onError`.
 - If another device logs in with the same ID and the server replaces this connection (`AUTH_CLEAR`), the client clears its credentials and **stops in the `IO_STOP` state**. It does not reconnect anonymously. Check the reason with `io.lastReason` and `setLog`; call `auth()` and `begin()` to start again.
-- Examples: [uno_ethernet_duplicate_login](examples/uno_ethernet_duplicate_login/uno_ethernet_duplicate_login.ino), [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). For the server's duplicate login policy, see [server authentication](https://iosignal.net/en/docs/server/authentication#duplicate-login).
+- Example: [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). For the server's duplicate login policy, see [server authentication](https://iosignal.net/en/docs/server/authentication#duplicate-login).
 
 ## Documentation and related packages
 
