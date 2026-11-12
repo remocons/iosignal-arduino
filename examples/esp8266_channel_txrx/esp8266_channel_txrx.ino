@@ -5,37 +5,39 @@
 
   An example of communicating between Arduinos and controlling them with a webapp.
     1. change the LED_PIN and BUTTON_PIN numbers according to your board.
-    2. set WIFI_SSID and KEY when using wifi.
-    3. iosignal server information is used without modification. If you use another server, change the server address and port number.
-    4. compile and upload to Arduino.
-    5. Access http://test.iosignal.net with a modern web browser.
+    2. compile and upload to Arduino.
+    3. set Wi-Fi over USB on https://test.iosignal.net/wifi/ (the board keeps it), or write it in WIFI_SSID and WIFI_PASS below.
+       The same page can set another IOSignal server (host:port) and a device key; the server below is the default.
+    4. Access https://test.iosignal.net with a modern web browser.
 
   [kr] 아두이노들간의 통신과 웹앱으로 제어하는 예제입니다.
     1. 보드에 따라 LED_PIN과 BUTTON_PIN 번호를 변경하세요.
-    2. wifi 사용시 WIFI_SSID와 KEY 를 설정하세요.
-    3. iosignal 서버 정보는 수정 없이 그대로 사용합니다. 다른 서버를 사용할 경우 서버 주소와 포트번호를 변경해줍니다.
-    4. 아두이노에 컴파일하고 업로딩합니다.
-    5. 모던 웹브라우저로  http://test.iosignal.net 에 접속하세요.
+    2. 아두이노에 컴파일하고 업로딩합니다.
+    3. USB로 연결해 https://test.iosignal.net/wifi/ 에서 Wi-Fi를 넣습니다(보드가 저장). 또는 아래 WIFI_SSID, WIFI_PASS에 씁니다.
+       같은 페이지에서 다른 IOSignal 서버(호스트:포트)와 장치 키도 넣을 수 있고, 아래 서버는 기본값입니다.
+    4. 모던 웹브라우저로 https://test.iosignal.net 에 접속하세요.
  */
 
 #if defined(ESP8266)
- #include <ESP8266WiFi.h>
  #define BOARD_NAME "esp8266"
  #define BUTTON_PIN 14
 #elif defined(ESP32)
- #include <WiFi.h>
  #define BOARD_NAME "esp32"
  #define BUTTON_PIN 12
 #else
  #error "Select an ESP8266 or ESP32 board for this example."
 #endif
 #include <IOSignal.h>
+#include <IOSignalConfig.h>
 #include <Bounce2.h>
 
 #define LED_PIN 2
+#define WIFI_SSID "WIFI_SSID"
+#define WIFI_PASS "WIFI_PASS"
 
 WiFiClient client;
 IOSignal io;
+IOSignalConfig config;
 Bounce2::Button downBtn = Bounce2::Button();
 
 void setup() {
@@ -47,24 +49,17 @@ void setup() {
 
   Serial.begin(115200);
   Serial.println();
-  Serial.print("Connecting... ");
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin("WIFI_SSID", "WIFI_PASS");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  // Wi-Fi, server and device key: set over USB, or the sketch values.
+  config.begin( Serial, BOARD_NAME " channel", WIFI_SSID, WIFI_PASS );
+  config.setServer( "io.iosignal.net", 55488 );
+  config.printServer();
 
   io.setRxBuffer( 200 );
-  io.begin( &client , "io.iosignal.net", 55488);  
+  io.setLog( [](const char* line) { Serial.println(line); } );
   io.onReady( &onReady );
   io.onMessage( &onMessage );
+  if ( config.key() ) io.auth( config.key() ); // a device key set over USB, else anonymous
+  io.begin( &client, config.host(), config.port() );
 }
 
 
@@ -97,7 +92,8 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
 
 
 void loop() {
-    io.loop();
+    config.loop(); // USB setup requests, Wi-Fi reconnect
+    if ( config.connected() ) io.loop();
     downBtn.update();
     if (downBtn.pressed()) {
         Serial.println("down");

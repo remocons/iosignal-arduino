@@ -7,6 +7,8 @@
 #######################################
 
 IOSignal	KEYWORD1
+IOSignalConfig	KEYWORD1
+IOSignalSetting	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -34,6 +36,33 @@ onError	KEYWORD2
 setLog	KEYWORD2
 clear	KEYWORD2
 setRxBuffer	KEYWORD2
+
+#######################################
+# Methods and Functions (KEYWORD2)
+# IOSignalConfig, IOSignalSetting (board settings over USB)
+#######################################
+
+connected	KEYWORD2
+attachSerial	KEYWORD2
+onOtherInput	KEYWORD2
+wifiStored	KEYWORD2
+setServer	KEYWORD2
+setKey	KEYWORD2
+host	KEYWORD2
+port	KEYWORD2
+key	KEYWORD2
+printServer	KEYWORD2
+setUrl	KEYWORD2
+setFirmware	KEYWORD2
+value	KEYWORD2
+toInt	KEYWORD2
+toBool	KEYWORD2
+isStored	KEYWORD2
+setFromRemote	KEYWORD2
+onChange	KEYWORD2
+range	KEYWORD2
+options	KEYWORD2
+maxLength	KEYWORD2
 
 #######################################
 # Methods and Functions (KEYWORD2)

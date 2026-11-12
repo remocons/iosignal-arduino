@@ -62,6 +62,38 @@ void loop() {
 - Sending: `signal(tag, ...)` for channel and CID tags, `signal2(target, topic, ...)` for a tag made by joining two strings (e.g. `signal2(cid, "@pong", ...)` → `cid@pong`), and `signal_e2e()` for end-to-end encryption.
 - Diagnostics: `onError(callback)` receives error codes, and `setLog(callback)` receives human-readable notes.
 
+## Board settings (ESP32, ESP8266, 9.13.0)
+
+With `IOSignalConfig.h`, board settings change from a browser over USB without rebuilding the sketch. The page is [test.iosignal.net/wifi](https://test.iosignal.net/wifi/) (desktop Chrome or Edge, Korean). It uses the standard [Improv Wi-Fi Serial](https://www.improv-wifi.com/serial/) protocol plus IOSignal commands.
+
+```cpp
+#include <IOSignal.h>
+#include <IOSignalConfig.h>
+
+IOSignalConfig config;
+IOSignalSetting target(config, "target", "Target CID", "the-cid", IOSignalSetting::CID); // optional sketch setting
+
+void setup() {
+  Serial.begin(115200);
+  config.begin(Serial, "My Device", "WIFI_SSID", "WIFI_PASS"); // placeholders: use the Wi-Fi kept in the chip
+  config.setServer("io.iosignal.net", 55488);                  // default server, changeable in the browser
+  if (config.key()) io.auth(config.key());                     // device key set in the browser
+  io.setLog([](const char* line) { Serial.println(line); });
+  io.begin(&client, config.host(), config.port());
+}
+
+void loop() {
+  config.loop();                     // browser requests, Wi-Fi reconnect
+  if (config.connected()) io.loop();
+}
+```
+
+- **Wi-Fi**: the chip keeps it for the next boot. Real values in the sketch win at every boot. A failed attempt goes back to the previous network.
+- **Server (host:port) and device key (`id.key`)**: values set in the browser win over the sketch ones; clearing them brings the sketch values back. The key is never sent back.
+- **Sketch settings** (`IOSignalSetting`): declare text, CID, integer (range), on/off or choice settings, optionally remote, secret or restart, and the page builds the fields. Code reads `value()`, `toInt()`, `toBool()` and applies changes in `onChange()`. Up to 8 settings, values up to 64 bytes.
+- Values are kept in Preferences (ESP32) or LittleFS (ESP8266, a flash layout with a file system). ESP32 and ESP8266 only; on other boards the header is empty.
+- A board that uses its TX pin for something else (ESP-01) starts with `begin(name, …)` without serial and calls `attachSerial()` only in a setup mode. A sketch that reads its own serial commands gets them through `onOtherInput()`.
+
 ## RX buffer and large messages
 
 - `setRxBuffer(size)` sets the largest frame the device can receive. Without it, `begin()` allocates **80 bytes**.
@@ -98,7 +130,7 @@ To develop locally before a new release reaches the Library Manager, install the
 
 ## Peer ping/pong example
 
-Open the [peer_ping_pong example](examples/peer_ping_pong/peer_ping_pong.ino) on an ESP32 (including ESP32-C3) or ESP8266. Replace the Wi-Fi placeholders, compile and upload, then open the Serial Monitor at 115200 baud to see the device CID and received message tags (`[RX]`).
+Open the [peer_ping_pong example](examples/peer_ping_pong/peer_ping_pong.ino) on an ESP32 (including ESP32-C3) or ESP8266. Compile and upload, set Wi-Fi over USB on the [board settings page](https://test.iosignal.net/wifi/) (or replace the Wi-Fi placeholders), then open the Serial Monitor at 115200 baud to see the device CID and received message tags (`[RX]`).
 
 The device answers another device's ping immediately and then prints `[TX] @pong -> <sender-cid>`. All Arduino examples connect to `io.iosignal.net:55488`. In the web CLI, run `open wss://io.iosignal.net/ws` and then `ping <arduino-cid>`; the CLI prints `pong (<arduino-cid>)`.
 
@@ -107,6 +139,14 @@ The example handles only direct `@ping` TEXT messages in `onMessage()`. It immed
 It does not validate CIDs, parse serial commands or handle response waits or timeouts. No channel subscription is needed. For local tests, enable both the WebSocket (CLI) port and the CongSocket (Arduino) port on the same server.
 
 ## Changes by version
+
+### 9.13.0
+
+- **Added board settings (ESP32, ESP8266).** `IOSignalConfig.h`, `IOSignalSettings.h`, `IOSignalImprov.h`. Wi-Fi, the server (host:port), the device key and sketch settings (`IOSignalSetting`) change from a browser over USB. See [Board settings](#board-settings-esp32-esp8266-9130) above.
+- **Connection failures are reported.** With `setLog()`, the client prints a failed TCP connect, no server reply within 10 s (`SERVER_HELLO_TIMEOUT_MS`, e.g. a WebSocket or other wrong port) and a refused device key. With no reply it drops the connection and retries.
+- The ESP examples (`esp8266_channel_txrx`, `esp01_channel_txrx`, `esp32c3_duplicate_login`, `peer_ping_pong`) use board settings and no longer block waiting for Wi-Fi.
+- The `esp32cam` example was removed. It becomes a camera whose pictures show on a remocon.kr device card and moves to the Remocon library. The device key it contained stays in the public history: do not use it.
+- This version changes the Arduino library only. The public iosignal (npm) package is 9.12.0 at this point.
 
 ### 9.12.0
 

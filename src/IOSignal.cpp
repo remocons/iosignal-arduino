@@ -26,8 +26,22 @@ void IOSignal::loop()
       delay(3000); 
       if(this->client->connect( _host , _port) ){
         state = IO_OPEN;
+        openedAt = millis();
+        connectFailLogged = false;
+      } else if (!connectFailLogged) {
+        connectFailLogged = true;
+        logServer("[IOSignal] cannot connect to ", "");
       }
       return;
+  }
+
+  // Connected, but the server never said hello: not an IOSignal TCP port (a web or WebSocket port,
+  // another service). Drop it and retry instead of waiting forever.
+  if (state == IO_OPEN && millis() - openedAt > SERVER_HELLO_TIMEOUT_MS) {
+    logServer("[IOSignal] no reply from ", " in 10 s. Is it the IOSignal TCP port?");
+    this->client->stop();
+    state = IO_CLOSED;
+    return;
   }
 
   if ((getUnixTime() - lastTxRxTime) > pingPeriod)
@@ -241,6 +255,7 @@ void IOSignal::loop()
       
       if( this->client->connect( ipString , port ) ){
         state = IO_OPEN;
+        openedAt = millis();
       }
       if (tmpbuf != NULL) free(tmpbuf);
       return;
@@ -262,6 +277,7 @@ void IOSignal::loop()
     {
       isAuthorized = false;
       state = IO_AUTH_FAIL;
+      logServer("[IOSignal] server reply to the device key did not verify at ", ". Wrong server for this key?");
       if (errorCallback) {
           errorCallback( IO_AUTH_FAIL);
       }
@@ -273,6 +289,7 @@ void IOSignal::loop()
   case Boho::MsgType::AUTH_FAIL:
     isAuthorized = false;
     state = IO_AUTH_FAIL;
+    logServer("[IOSignal] device key refused by ", ". Is the key registered on this server?");
     // Serial.println(F(">> AUTH_FAIL"));
     if (errorCallback) {
         errorCallback( IO_AUTH_FAIL);
@@ -289,6 +306,14 @@ void IOSignal::loop()
   return;
 }
 
+
+void IOSignal::logServer(const char *prefix, const char *suffix)
+{
+  if (!logCallback) return;
+  char line[128];
+  snprintf(line, sizeof(line), "%s%s:%u%s", prefix, _host ? _host : "", (unsigned)_port, suffix);
+  logCallback(line);
+}
 
 void IOSignal::begin(Client *client, const char *_host, uint16_t _port )
 {

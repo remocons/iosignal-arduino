@@ -62,6 +62,38 @@ void loop() {
 - 송신: `signal(tag, ...)`(채널·CID 태그), `signal2(target, topic, ...)`(두 문자열을 이어 붙인 태그, 예: `signal2(cid, "@pong", ...)` → `cid@pong`), `signal_e2e()`(종단간 암호화).
 - 진단: `onError(callback)`은 오류 코드를, `setLog(callback)`은 사람이 읽을 수 있는 안내를 전달합니다.
 
+## 보드 설정 (ESP32·ESP8266, 9.13.0)
+
+`IOSignalConfig.h`를 쓰면 스케치를 다시 빌드하지 않고 USB로 연결한 브라우저에서 보드 설정을 바꿉니다. 페이지는 [test.iosignal.net/wifi](https://test.iosignal.net/wifi/)(데스크톱 Chrome·Edge)이고, 표준 [Improv Wi-Fi Serial](https://www.improv-wifi.com/serial/)에 IOSignal 전용 명령을 더했습니다.
+
+```cpp
+#include <IOSignal.h>
+#include <IOSignalConfig.h>
+
+IOSignalConfig config;
+IOSignalSetting target(config, "target", "Target CID", "the-cid", IOSignalSetting::CID); // 선택: 스케치 설정 항목
+
+void setup() {
+  Serial.begin(115200);
+  config.begin(Serial, "My Device", "WIFI_SSID", "WIFI_PASS"); // 자리표시자면 칩에 저장된 Wi-Fi를 씁니다
+  config.setServer("io.iosignal.net", 55488);                  // 기본 서버. 브라우저에서 바꿀 수 있습니다
+  if (config.key()) io.auth(config.key());                     // 브라우저에서 넣은 장치 키
+  io.setLog([](const char* line) { Serial.println(line); });
+  io.begin(&client, config.host(), config.port());
+}
+
+void loop() {
+  config.loop();                     // 브라우저 요청, Wi-Fi 재접속
+  if (config.connected()) io.loop();
+}
+```
+
+- **Wi-Fi**: 칩이 저장해 두므로 다음 부팅에도 씁니다. 스케치에 실제 값을 쓰면 그 값이 부팅할 때마다 우선합니다. 접속에 실패하면 이전 설정으로 돌아갑니다.
+- **서버(호스트:포트)와 장치 키(`id.key`)**: 브라우저에서 넣은 값이 스케치 값보다 우선하고, 지우면 스케치 값으로 돌아갑니다. 키는 보드 밖으로 다시 보내지 않습니다.
+- **스케치 설정 항목**(`IOSignalSetting`): 글자, CID, 정수(범위), 켜기/끄기, 선택 형식과 원격 변경 허용·비밀·재시작 속성을 선언하면 페이지가 입력칸을 만듭니다. 코드는 `value()`, `toInt()`, `toBool()`로 읽고, `onChange()`로 바로 적용합니다. 8개까지, 값은 64바이트까지입니다.
+- 저장 위치는 ESP32 Preferences, ESP8266 LittleFS(파일 시스템이 있는 플래시 구성 필요)입니다. ESP32·ESP8266 전용이며 다른 보드에서는 이 헤더가 비어 있습니다.
+- TX 핀을 다른 용도로 쓰는 보드(ESP-01)는 `begin(name, …)`로 시리얼 없이 시작하고 `attachSerial()`로 설정 모드에서만 켭니다. 스케치가 직접 시리얼 명령을 읽으면 `onOtherInput()`으로 받습니다.
+
 ## RX 버퍼와 큰 메시지
 
 - `setRxBuffer(size)`는 한 번에 받을 수 있는 최대 프레임 크기를 정합니다. 호출하지 않으면 `begin()`이 **80바이트**를 할당합니다.
@@ -98,7 +130,7 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.0.0 이상**을 사용합
 
 ## 장치 간 ping/pong 예제
 
-ESP32(ESP32-C3 포함) 또는 ESP8266에서 [peer_ping_pong 예제](examples/peer_ping_pong/peer_ping_pong.ino)를 엽니다. Wi-Fi 자리표시자를 수정하고 컴파일·업로드한 뒤, 시리얼 모니터를 115200 baud로 열면 장치 CID와 수신 메시지 태그(`[RX]`)를 확인할 수 있습니다.
+ESP32(ESP32-C3 포함) 또는 ESP8266에서 [peer_ping_pong 예제](examples/peer_ping_pong/peer_ping_pong.ino)를 엽니다. 컴파일·업로드하고 USB로 [보드 설정](https://test.iosignal.net/wifi/)에서 Wi-Fi를 넣은 뒤(또는 스케치의 Wi-Fi 값을 수정), 시리얼 모니터를 115200 baud로 열면 장치 CID와 수신 메시지 태그(`[RX]`)를 확인할 수 있습니다.
 
 다른 장치의 ping에는 즉시 응답하며, 이어서 `[TX] @pong -> <sender-cid>`를 출력합니다. 모든 Arduino 예제는 `io.iosignal.net:55488`에 연결합니다. 웹 CLI에서 `open wss://io.iosignal.net/ws`를 실행한 뒤 `ping <arduino-cid>`를 입력하면, CLI에 `pong (<arduino-cid>)`가 출력됩니다.
 
@@ -107,6 +139,14 @@ ESP32(ESP32-C3 포함) 또는 ESP8266에서 [peer_ping_pong 예제](examples/pee
 CID 검증, 시리얼 명령 파서, 응답 대기 또는 시간 초과 처리는 포함하지 않습니다. 채널 구독도 필요하지 않습니다. 로컬 테스트에서는 같은 서버에서 WebSocket(CLI) 포트와 CongSocket(Arduino) 포트를 활성화하세요.
 
 ## 버전별 변경 사항
+
+### 9.13.0
+
+- **보드 설정을 추가했습니다(ESP32·ESP8266).** `IOSignalConfig.h`, `IOSignalSettings.h`, `IOSignalImprov.h`. USB로 연결한 브라우저에서 Wi-Fi, 서버(호스트:포트), 장치 키와 스케치 설정 항목(`IOSignalSetting`)을 바꿉니다. 위 [보드 설정](#보드-설정-esp32esp8266-9130)을 참고하세요.
+- **접속 실패를 알려 줍니다.** `setLog()`로 TCP 연결 실패, 10초 동안 서버 응답 없음(`SERVER_HELLO_TIMEOUT_MS`, 웹소켓 포트 등 잘못된 포트), 장치 키 거부를 출력합니다. 응답이 없으면 끊고 다시 접속합니다.
+- ESP 예제(`esp8266_channel_txrx`, `esp01_channel_txrx`, `esp32c3_duplicate_login`, `peer_ping_pong`)가 보드 설정을 씁니다. Wi-Fi 연결을 기다리며 멈추지 않습니다.
+- 예제 `esp32cam`을 지웠습니다. 사진을 remocon.kr 장치 카드로 보는 카메라 예제로 바뀌어 Remocon 라이브러리로 옮겨 갑니다. 이 예제에 들어 있던 장치 키는 공개 이력에 남아 있으므로 쓰지 마세요.
+- 이 버전은 Arduino 라이브러리에만 있는 변경입니다. 같은 시점의 공개 iosignal(npm)은 9.12.0입니다.
 
 ### 9.12.0
 

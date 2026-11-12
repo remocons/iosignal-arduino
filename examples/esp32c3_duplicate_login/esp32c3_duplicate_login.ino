@@ -4,7 +4,9 @@
   https://github.com/remocons/iosignal-arduino
 
   Shows what this board prints when another connection logs in with the same ID.
-    1. Set WIFI_SSID / WIFI_PASSWORD, a registered ID_KEY ("did.key") and the server below.
+    1. Set Wi-Fi, a registered device key ("did.key") and the server over USB on
+       https://test.iosignal.net/wifi/ (the board keeps them), or write WIFI_SSID / WIFI_PASSWORD,
+       ID_KEY and the server below; values set over USB win over the sketch.
     2. Arduino IDE: board "ESP32C3 Dev Module", "USB CDC On Boot: Enabled" so Serial
        prints over the USB port. Upload and open the Serial Monitor at 115200 baud.
     3. Wait for "READY cid: ...". The on-board LED (GPIO 8, active low) turns on.
@@ -19,7 +21,8 @@
        a message, so this sketch reports repeated "closed before ready" attempts.
 
   [kr] 같은 ID로 다른 곳에서 로그인했을 때 이 보드에 출력되는 내용을 확인하는 예제입니다.
-    1. WIFI_SSID / WIFI_PASSWORD, 등록한 ID_KEY("did.key"), 서버 주소를 설정합니다.
+    1. USB로 연결해 https://test.iosignal.net/wifi/ 에서 Wi-Fi, 등록한 장치 키("did.key"), 서버를 넣습니다(보드가 저장).
+       또는 아래 WIFI_SSID / WIFI_PASSWORD, ID_KEY, 서버 주소에 씁니다. USB로 넣은 값이 우선합니다.
     2. Arduino IDE에서 보드 "ESP32C3 Dev Module", "USB CDC On Boot: Enabled"를 선택해야
        USB로 시리얼 출력이 보입니다. 업로드 후 시리얼 모니터(115200)를 엽니다.
     3. "READY cid: ..."가 나오면 보드 LED(GPIO 8, active low)가 켜집니다.
@@ -34,25 +37,23 @@
   Requires the IOSignal Arduino library release with setLog() and lastReason.
  */
 
-#if defined(ESP8266)
-#include <ESP8266WiFi.h>
-#else
-#include <WiFi.h>
-#endif
 #include <IOSignal.h>
+#include <IOSignalConfig.h>
 
 #define LED_PIN 8       // ESP32-C3 Super Mini on-board LED
 #define LED_ON  LOW     // active low
 #define BOOT_PIN 9      // ESP32-C3 Super Mini BOOT button (active low)
 
-const char *WIFI_SSID = "YOUR_WIFI_SSID";
-const char *WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char *WIFI_SSID = "WIFI_SSID";
+const char *WIFI_PASSWORD = "WIFI_PASS";
 const char *ID_KEY = "did.key";             // registered device ID and key
 const char *SERVER_HOST = "io.remocon.kr"; // ID_KEY from your remocon.kr account (device page)
 const uint16_t SERVER_PORT = 55488;          // CongSocket port
 
 WiFiClient client;
 IOSignal io;
+IOSignalConfig config;
+bool restartRequested = false; // 'r' on the serial port (bytes that are not board settings requests)
 
 bool readySinceOpen = false;
 uint8_t lastState = IO_CLOSED;
@@ -120,15 +121,16 @@ void connectServer()
   readySinceOpen = false;
   failedAttempts = 0;
   lastState = IO_CLOSED;
-  io.auth(ID_KEY);
-  io.begin(&client, SERVER_HOST, SERVER_PORT);
+  if (config.key()) io.auth(config.key()); // set over USB, else ID_KEY below
+  io.begin(&client, config.host(), config.port());
 }
 
 // 'r' in the Serial Monitor or the BOOT button logs in again after the server stopped us.
 void restartCommand()
 {
   static unsigned long pressedAt = 0;
-  bool request = Serial.available() && Serial.read() == 'r';
+  bool request = restartRequested;
+  restartRequested = false;
   if (digitalRead(BOOT_PIN) == LOW)
   {
     if (pressedAt == 0) pressedAt = millis();
@@ -165,11 +167,12 @@ void setup()
   delay(1000); // USB CDC needs a moment after reset
   Serial.println(F("Duplicate login test"));
 
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) delay(250);
-  Serial.print(F("IP: "));
-  Serial.println(WiFi.localIP());
+  // Wi-Fi, server and device key: set over USB, or the sketch values.
+  config.begin(Serial, "Duplicate login", WIFI_SSID, WIFI_PASSWORD);
+  config.setServer(SERVER_HOST, SERVER_PORT);
+  config.setKey(ID_KEY);
+  config.printServer();
+  config.onOtherInput([](uint8_t b) { if (b == 'r') restartRequested = true; });
 
   io.setRxBuffer(200);
   io.onReady(onReady);
@@ -180,14 +183,9 @@ void setup()
 
 void loop()
 {
-  static unsigned long wifiRetry = 0;
-  if (WiFi.status() == WL_CONNECTED)
+  config.loop(); // USB setup requests, Wi-Fi reconnect, other serial input
+  if (config.connected())
     io.loop();
-  else if (millis() - wifiRetry >= 10000)
-  {
-    wifiRetry = millis();
-    WiFi.reconnect();
-  }
   watchConnection();
   restartCommand();
   showState();

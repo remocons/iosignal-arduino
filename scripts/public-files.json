@@ -1,8 +1,6 @@
 {
   "sync": [
     "examples/esp01_channel_txrx/esp01_channel_txrx.ino",
-    "examples/esp32cam/esp32cam.ino",
-    "examples/esp32cam/index.html",
     "examples/esp8266_channel_txrx/esp8266_channel_txrx.ino",
     "examples/uno_ethernet_channel_txrx/uno_ethernet_channel_txrx.ino",
     "examples/uno_r4_wifi_channel_receiver_txrx/uno_r4_wifi_channel_receiver_txrx.ino",

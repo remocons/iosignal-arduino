@@ -9,6 +9,8 @@
 
 #define DEFAULT_TX_BUF_SIZE 50
 #define DEFAULT_RX_BUF_SIZE 80 // used by begin() when setRxBuffer() was not called
+// A connection that gets no server hello in this time is dropped and retried (wrong port, other service).
+#define SERVER_HELLO_TIMEOUT_MS 10000
 #define MAX_CID_LEN 12
 #define MAX_REASON_LEN 32
 
@@ -159,6 +161,9 @@ public:
   Client *client = nullptr;
   const char *_host = nullptr;
   uint16_t _port = 55488L;
+  uint32_t openedAt = 0;          // millis() when the TCP connection opened
+  bool connectFailLogged = false; // one log line per run of failed connects
+  void logServer(const char *prefix, const char *suffix);
 
 private:
   uint8_t* _rx_buffer = nullptr;
