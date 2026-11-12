@@ -11,6 +11,9 @@
     "src/CongPacket.h",
     "src/IOSignal.cpp",
     "src/IOSignal.h",
+    "src/IOSignalConfig.h",
+    "src/IOSignalSettings.h",
+    "src/IOSignalImprov.h",
     "examples/peer_ping_pong/peer_ping_pong.ino",
     "examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino"
   ],
