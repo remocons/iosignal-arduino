@@ -140,6 +140,12 @@ It does not validate CIDs, parse serial commands or handle response waits or tim
 
 ## Changes by version
 
+### 9.14.1
+
+- **Board settings can choose anonymous login (ESP32, ESP8266).** "익명으로 접속" (connect anonymously) on the [board settings page](https://test.iosignal.net/wifi/) makes the board connect without a key even when the sketch sets one (`setKey`). The board stores `-` as the key; clearing the stored key brings the sketch key back. Older firmware refuses this value.
+- The `esp32c3_duplicate_login` example now defaults to `io.iosignal.net`. It needs an IOSignal server you run yourself and a device key registered on it; `ID_KEY` ("did.key") in the sketch is a placeholder.
+- The Remocon example pages moved to [arduino.remocon.kr](https://arduino.remocon.kr/); [test.iosignal.net](https://test.iosignal.net/) now shows the IOSignal examples.
+
 ### 9.14.0
 
 - **Less RAM on the UNO (AVR).** The `setLog()` texts and the redirect address format stay in flash (`PSTR`). In 9.13.0 the new texts were copied to RAM, and an UNO + Ethernet sketch could stop during boot. For `uno-ethernet-ir` (Remocon), global variables go from 1654 to 1226 bytes (free RAM 394 → 822 bytes). The log lines are unchanged.

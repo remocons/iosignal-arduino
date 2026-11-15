@@ -3,7 +3,8 @@
 // Update data (IOSignal command 0xA1): [field][length][value]... in any order.
 //   field 1 host  1-63 characters: letters, digits, '.', '-'
 //   field 2 port  "1"-"65535"
-//   field 3 key   "id.key": id 1-8 characters, a dot, then the key; printable ASCII without spaces, <= 64
+//   field 3 key   "id.key": id 1-8 characters, a dot, then the key; printable ASCII without spaces, <= 64,
+//                 or "-": connect anonymously even when the sketch has a key (setKey)
 // Length 0 clears the stored value (the sketch value is used again). Fields not sent stay as they are.
 // The whole update is refused when any field is invalid, unknown or repeated.
 //
@@ -61,6 +62,12 @@ inline bool validKey(const char* s, size_t n) {
   return true;
 }
 
+// The stored key "-": anonymous by choice. It wins over the sketch key; clearing it brings that back.
+inline bool isAnonymous(const char* s, size_t n) { return n == 1 && s[0] == '-'; }
+inline bool isAnonymous(const char* s) { return s && s[0] == '-' && s[1] == 0; }
+// What may be stored as the key: a valid "id.key" or "-".
+inline bool storableKey(const char* s, size_t n) { return isAnonymous(s, n) || validKey(s, n); }
+
 // Writes the id part of "id.key" (at most 8 characters) into out[9].
 inline void keyId(const char* key, char* out) {
   size_t i = 0;
@@ -90,7 +97,7 @@ inline bool applyUpdate(const uint8_t* data, size_t size, Settings* s, bool* cha
       if (len && !parsePort(value, len, &port)) return false;
       next.port = port;
     } else {
-      if (len && !validKey(value, len)) return false;
+      if (len && !storableKey(value, len)) return false;
       memcpy(next.key, value, len);
       next.key[len] = 0;
     }
@@ -136,7 +143,7 @@ inline Settings fromText(const char* text, size_t size) {
     size_t n = end - at;
     if (n > 5 && memcmp(line, "host=", 5) == 0 && validHost(line + 5, n - 5)) { memcpy(s.host, line + 5, n - 5); s.host[n - 5] = 0; }
     else if (n > 5 && memcmp(line, "port=", 5) == 0) { uint16_t p; if (parsePort(line + 5, n - 5, &p)) s.port = p; }
-    else if (n > 4 && memcmp(line, "key=", 4) == 0 && validKey(line + 4, n - 4)) { memcpy(s.key, line + 4, n - 4); s.key[n - 4] = 0; }
+    else if (n > 4 && memcmp(line, "key=", 4) == 0 && storableKey(line + 4, n - 4)) { memcpy(s.key, line + 4, n - 4); s.key[n - 4] = 0; }
     at = end + 1;
   }
   return s;

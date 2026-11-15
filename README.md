@@ -140,6 +140,12 @@ CID 검증, 시리얼 명령 파서, 응답 대기 또는 시간 초과 처리�
 
 ## 버전별 변경 사항
 
+### 9.14.1
+
+- **보드 설정에서 익명 접속을 고를 수 있습니다(ESP32·ESP8266).** [보드 설정](https://test.iosignal.net/wifi/)의 "익명으로 접속"을 고르면 스케치에 장치 키(`setKey`)가 있어도 쓰지 않고 익명으로 접속합니다. 보드는 키 자리에 `-`를 저장하고, "저장된 장치 키·익명 설정 지우기"로 스케치의 키로 돌아갑니다. 이전 펌웨어는 이 값을 받지 않습니다.
+- 예제 `esp32c3_duplicate_login`의 기본 서버를 `io.iosignal.net`으로 바꿨습니다. 이 예제는 직접 운영하는 IOSignal 서버와 그 서버에 등록한 장치 키가 필요합니다. 스케치의 `ID_KEY`("did.key")는 가짜 값입니다.
+- Remocon 예제 안내는 [arduino.remocon.kr](https://arduino.remocon.kr/)로 옮겼고, [test.iosignal.net](https://test.iosignal.net/)에는 IOSignal 예제만 남았습니다.
+
 ### 9.14.0
 
 - **UNO(AVR)에서 RAM을 덜 씁니다.** `setLog()` 문구와 리다이렉트 주소 서식을 플래시에 둡니다(`PSTR`). 9.13.0에서 늘어난 문구가 RAM에 복사되어 UNO + Ethernet 스케치가 부팅 중 멈출 수 있었습니다. `uno-ethernet-ir`(Remocon) 기준 전역 변수 1654 → 1226바이트(남는 RAM 394 → 822바이트)입니다. 로그 내용은 그대로입니다.

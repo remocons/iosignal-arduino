@@ -35,7 +35,7 @@
 #include "IOSignalImprov.h"
 #include "IOSignalSettings.h"
 
-#define IOSIGNAL_VERSION "9.14.0"
+#define IOSIGNAL_VERSION "9.14.1"
 
 class IOSignalConfig;
 
@@ -145,8 +145,9 @@ class IOSignalConfig {
   // Values to use: stored in the browser first, then the sketch ones.
   const char* host() const { return _stored.host[0] ? _stored.host : _sketchHost; }
   uint16_t port() const { return _stored.port ? _stored.port : _sketchPort; }
-  // nullptr means anonymous.
+  // nullptr means anonymous: no key, or "-" stored from the browser (anonymous even with a sketch key).
   const char* key() const {
+    if (iosignal_settings::isAnonymous(_stored.key)) return nullptr;
     if (_stored.key[0]) return _stored.key;
     return _sketchKey && iosignal_settings::validKey(_sketchKey, strlen(_sketchKey)) ? _sketchKey : nullptr;
   }
@@ -159,7 +160,7 @@ class IOSignalConfig {
     out().print(port());
     out().print(_stored.host[0] || _stored.port ? F(" (stored)") : F(" (sketch)"));
     const char* k = key();
-    if (!k) { out().println(F(", anonymous")); return; }
+    if (!k) { out().println(iosignal_settings::isAnonymous(_stored.key) ? F(", anonymous (stored)") : F(", anonymous")); return; }
     char id[9];
     iosignal_settings::keyId(k, id);
     out().print(F(", key "));
@@ -351,7 +352,7 @@ class IOSignalConfig {
       iosignal_settings::keyId(k, id);
       snprintf(keyState, sizeof(keyState), "%s:%s", _stored.key[0] ? "stored" : "sketch", id);
     } else {
-      strcpy(keyState, "none");
+      strcpy(keyState, iosignal_settings::isAnonymous(_stored.key) ? "anonymous" : "none");
     }
     const char* row[] = {host(), _stored.host[0] ? "stored" : "sketch", port, _stored.port ? "stored" : "sketch",
                          keyState, storageReady() ? "ok" : "none"};
@@ -389,7 +390,7 @@ class IOSignalConfig {
     iosignal_settings::Settings s;
     String host = prefs.getString("host", ""), key = prefs.getString("key", "");
     if (iosignal_settings::validHost(host.c_str(), host.length())) strcpy(s.host, host.c_str());
-    if (iosignal_settings::validKey(key.c_str(), key.length())) strcpy(s.key, key.c_str());
+    if (iosignal_settings::storableKey(key.c_str(), key.length())) strcpy(s.key, key.c_str());
     s.port = prefs.getUShort("port", 0);
     prefs.end();
     _stored = s;

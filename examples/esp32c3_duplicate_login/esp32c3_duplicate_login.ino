@@ -4,6 +4,8 @@
   https://github.com/remocons/iosignal-arduino
 
   Shows what this board prints when another connection logs in with the same ID.
+  It needs an IOSignal server you run yourself and a device key registered on it: ID_KEY below
+  ("did.key") is a placeholder, and the public io.iosignal.net does not issue keys.
     1. Set Wi-Fi, a registered device key ("did.key") and the server over USB on
        https://test.iosignal.net/wifi/ (the board keeps them), or write WIFI_SSID / WIFI_PASSWORD,
        ID_KEY and the server below; values set over USB win over the sketch.
@@ -21,6 +23,8 @@
        a message, so this sketch reports repeated "closed before ready" attempts.
 
   [kr] 같은 ID로 다른 곳에서 로그인했을 때 이 보드에 출력되는 내용을 확인하는 예제입니다.
+  직접 운영하는 IOSignal 서버와 그 서버에 등록한 장치 키가 필요합니다. 아래 ID_KEY("did.key")는
+  가짜 값이고, 공개 서버 io.iosignal.net은 장치 키를 발급하지 않습니다.
     1. USB로 연결해 https://test.iosignal.net/wifi/ 에서 Wi-Fi, 등록한 장치 키("did.key"), 서버를 넣습니다(보드가 저장).
        또는 아래 WIFI_SSID / WIFI_PASSWORD, ID_KEY, 서버 주소에 씁니다. USB로 넣은 값이 우선합니다.
     2. Arduino IDE에서 보드 "ESP32C3 Dev Module", "USB CDC On Boot: Enabled"를 선택해야
@@ -46,8 +50,8 @@
 
 const char *WIFI_SSID = "WIFI_SSID";
 const char *WIFI_PASSWORD = "WIFI_PASS";
-const char *ID_KEY = "did.key";             // registered device ID and key
-const char *SERVER_HOST = "io.remocon.kr"; // ID_KEY from your remocon.kr account (device page)
+const char *ID_KEY = "did.key";             // placeholder: a key registered on your own IOSignal server
+const char *SERVER_HOST = "io.iosignal.net"; // your IOSignal server, where ID_KEY is registered
 const uint16_t SERVER_PORT = 55488;          // CongSocket port
 
 WiFiClient client;
