@@ -35,7 +35,7 @@
 #include "IOSignalImprov.h"
 #include "IOSignalSettings.h"
 
-#define IOSIGNAL_VERSION "9.13.0"
+#define IOSIGNAL_VERSION "9.14.0"
 
 class IOSignalConfig;
 
@@ -504,7 +504,20 @@ class IOSignalConfig {
 #endif
 
   void scan() {
+#if defined(ESP32)
+    // While the station keeps trying a stored network that is out of reach, ESP32 refuses to scan
+    // ("sta is connecting, return error") and the list comes back empty. Stop trying for the scan
+    // (the stored network is kept), then try again.
+    const bool paused = !connected();
+    if (paused) WiFi.disconnect(false, false);
+#endif
     int n = WiFi.scanNetworks();
+#if defined(ESP32)
+    if (paused && hasStored()) {
+      WiFi.reconnect();
+      _lastRetry = millis();
+    }
+#endif
     for (int i = 0; i < n; i++) {
       String ssid = WiFi.SSID(i);
       if (!ssid.length()) continue;

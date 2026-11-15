@@ -2,6 +2,8 @@
 #include "IOSignal.h"
 #include <Arduino.h>
 #include <string.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include "Client.h"
 
 IOSignal::IOSignal()
@@ -30,7 +32,7 @@ void IOSignal::loop()
         connectFailLogged = false;
       } else if (!connectFailLogged) {
         connectFailLogged = true;
-        logServer("[IOSignal] cannot connect to ", "");
+        logLine(IOS_TEXT("[IOSignal] cannot connect to %s:%u"), _host ? _host : "", (unsigned)_port);
       }
       return;
   }
@@ -38,7 +40,7 @@ void IOSignal::loop()
   // Connected, but the server never said hello: not an IOSignal TCP port (a web or WebSocket port,
   // another service). Drop it and retry instead of waiting forever.
   if (state == IO_OPEN && millis() - openedAt > SERVER_HELLO_TIMEOUT_MS) {
-    logServer("[IOSignal] no reply from ", " in 10 s. Is it the IOSignal TCP port?");
+    logLine(IOS_TEXT("[IOSignal] no reply from %s:%u in 10 s. Is it the IOSignal TCP port?"), _host ? _host : "", (unsigned)_port);
     this->client->stop();
     state = IO_CLOSED;
     return;
@@ -53,7 +55,7 @@ void IOSignal::loop()
   cong.run();
   if (cong._skipped) {
     cong._skipped = false;
-    if (logCallback) logCallback("[IOSignal] RX frame larger than the RX buffer: skipped.");
+    logLine(IOS_TEXT("[IOSignal] RX frame larger than the RX buffer: skipped."));
     if (errorCallback) errorCallback(CongPacket::OVER_SIZE);
   }
   if(cong._state >= 250){
@@ -229,14 +231,8 @@ void IOSignal::loop()
     close(IOSignal::MsgType::AUTH_CLEAR);
     this->client->stop();
     state = IO_STOP;
-    if (logCallback)
-    {
-      char line[24 + MAX_REASON_LEN + 22];
-      strcpy(line, "[IOSignal] AUTH_CLEAR: ");
-      strcat(line, reasonLen ? lastReason : "no reason");
-      strcat(line, " connection stopped.");
-      logCallback(line);
-    }
+    if (reasonLen) logLine(IOS_TEXT("[IOSignal] AUTH_CLEAR: %s connection stopped."), lastReason);
+    else logLine(IOS_TEXT("[IOSignal] AUTH_CLEAR: no reason connection stopped."));
     if (errorCallback) {
         errorCallback( IO_AUTH_CLEAR);
     }
@@ -250,7 +246,11 @@ void IOSignal::loop()
       close(IOSignal::MsgType::SERVER_REDIRECT);
   
       char ipString[16];
-      sprintf(ipString,  "%d.%d.%d.%d", message[1], message[2], message[3], message[4]);
+#if defined(__AVR__)
+      snprintf_P(ipString, sizeof(ipString), PSTR("%d.%d.%d.%d"), message[1], message[2], message[3], message[4]);
+#else
+      snprintf(ipString, sizeof(ipString), "%d.%d.%d.%d", message[1], message[2], message[3], message[4]);
+#endif
       uint16_t port = (message[5] << 8 ) + message[6];
       
       if( this->client->connect( ipString , port ) ){
@@ -277,7 +277,7 @@ void IOSignal::loop()
     {
       isAuthorized = false;
       state = IO_AUTH_FAIL;
-      logServer("[IOSignal] server reply to the device key did not verify at ", ". Wrong server for this key?");
+      logLine(IOS_TEXT("[IOSignal] server reply to the device key did not verify at %s:%u. Wrong server for this key?"), _host ? _host : "", (unsigned)_port);
       if (errorCallback) {
           errorCallback( IO_AUTH_FAIL);
       }
@@ -289,7 +289,7 @@ void IOSignal::loop()
   case Boho::MsgType::AUTH_FAIL:
     isAuthorized = false;
     state = IO_AUTH_FAIL;
-    logServer("[IOSignal] device key refused by ", ". Is the key registered on this server?");
+    logLine(IOS_TEXT("[IOSignal] device key refused by %s:%u. Is the key registered on this server?"), _host ? _host : "", (unsigned)_port);
     // Serial.println(F(">> AUTH_FAIL"));
     if (errorCallback) {
         errorCallback( IO_AUTH_FAIL);
@@ -307,11 +307,19 @@ void IOSignal::loop()
 }
 
 
-void IOSignal::logServer(const char *prefix, const char *suffix)
+// The 128-byte line lives on the stack only while a log callback is set and a line is written.
+void IOSignal::logLine(const char *format, ...)
 {
   if (!logCallback) return;
   char line[128];
-  snprintf(line, sizeof(line), "%s%s:%u%s", prefix, _host ? _host : "", (unsigned)_port, suffix);
+  va_list args;
+  va_start(args, format);
+#if defined(__AVR__)
+  vsnprintf_P(line, sizeof(line), format, args);
+#else
+  vsnprintf(line, sizeof(line), format, args);
+#endif
+  va_end(args);
   logCallback(line);
 }
 
@@ -361,7 +369,7 @@ void IOSignal::send(const uint8_t *buffer, uint32_t size)
     // A write that did not go out means the connection is stalled (e.g. the socket waited
     // its full timeout) or gone. Drop it so loop() reconnects, instead of blocking on
     // every later write while still looking connected.
-    if (logCallback) logCallback("[IOSignal] send failed: reconnecting.");
+    logLine(IOS_TEXT("[IOSignal] send failed: reconnecting."));
     if (client) client->stop();
     state = IO_CLOSED;
     return;

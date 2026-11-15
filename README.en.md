@@ -140,6 +140,14 @@ It does not validate CIDs, parse serial commands or handle response waits or tim
 
 ## Changes by version
 
+### 9.14.0
+
+- **Less RAM on the UNO (AVR).** The `setLog()` texts and the redirect address format stay in flash (`PSTR`). In 9.13.0 the new texts were copied to RAM, and an UNO + Ethernet sketch could stop during boot. For `uno-ethernet-ir` (Remocon), global variables go from 1654 to 1226 bytes (free RAM 394 → 822 bytes). The log lines are unchanged.
+- The 128-byte buffer for a log line is on the stack only while `setLog()` is set and a line is written.
+- ESP32 board settings: the Wi-Fi scan works while the board keeps retrying a stored network that is out of reach (retrying pauses for the scan, then resumes).
+- The `uno_ethernet_channel_txrx` example prints its serial texts with `F()` (RAM 1190 → 1126 bytes).
+- The public iosignal (npm) package is 9.14.0 at this point.
+
 ### 9.13.0
 
 - **Added board settings (ESP32, ESP8266).** `IOSignalConfig.h`, `IOSignalSettings.h`, `IOSignalImprov.h`. Wi-Fi, the server (host:port), the device key and sketch settings (`IOSignalSetting`) change from a browser over USB. See [Board settings](#board-settings-esp32-esp8266-9130) above.

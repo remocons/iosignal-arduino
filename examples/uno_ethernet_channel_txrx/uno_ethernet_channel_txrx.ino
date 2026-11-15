@@ -59,7 +59,7 @@ void setup() {
 
 void onReady()
 {
-  Serial.print("onReady cid: ");
+  Serial.print(F("onReady cid: "));
   Serial.println( io.cid );
   io.subscribe("#homeButton");
 }
@@ -67,11 +67,11 @@ void onReady()
 void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payloadSize)
 {
 
-  Serial.print(">> signal tag: " );
+  Serial.print(F(">> signal tag: "));
   Serial.print( tag );
-  Serial.print(" type: " );
+  Serial.print(F(" type: "));
   Serial.print( payloadType );
-  Serial.print(" size: " );
+  Serial.print(F(" size: "));
   Serial.println( payloadSize );
 
   if( strcmp(tag, "#homeButton") == 0){
@@ -89,7 +89,7 @@ void loop() {
   io.loop();   
   downBtn.update();
   if (downBtn.pressed()) {
-    Serial.println("down");
+    Serial.println(F("down"));
     io.signal("#homeButton", "uno3-eth" );
   }   
 }

@@ -7,6 +7,14 @@
 #include <Boho.h>
 #include "Client.h"
 
+// Log texts stay in flash on AVR (an UNO has 2 KB of RAM); elsewhere they are plain strings.
+#if defined(__AVR__)
+#include <avr/pgmspace.h>
+#define IOS_TEXT(s) PSTR(s)
+#else
+#define IOS_TEXT(s) (s)
+#endif
+
 #define DEFAULT_TX_BUF_SIZE 50
 #define DEFAULT_RX_BUF_SIZE 80 // used by begin() when setRxBuffer() was not called
 // A connection that gets no server hello in this time is dropped and retried (wrong port, other service).
@@ -163,7 +171,8 @@ public:
   uint16_t _port = 55488L;
   uint32_t openedAt = 0;          // millis() when the TCP connection opened
   bool connectFailLogged = false; // one log line per run of failed connects
-  void logServer(const char *prefix, const char *suffix);
+  // printf-style log line for setLog(); format is IOS_TEXT(...). Does nothing without a log callback.
+  void logLine(const char *format, ...);
 
 private:
   uint8_t* _rx_buffer = nullptr;
