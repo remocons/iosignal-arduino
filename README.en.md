@@ -130,7 +130,7 @@ To develop locally before a new release reaches the Library Manager, install the
 
 ## Changes by version
 
-### Next release (not released yet)
+### 9.14.2
 
 - **Example folders were renamed.** Behaviour is unchanged.
   - `esp8266_channel_txrx` → `esp_channel_txrx` (for both ESP8266 and ESP32)
