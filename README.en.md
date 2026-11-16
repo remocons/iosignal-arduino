@@ -140,6 +140,13 @@ It does not validate CIDs, parse serial commands or handle response waits or tim
 
 ## Changes by version
 
+### Next release (not released yet)
+
+- **Example folders were renamed.** Behaviour is unchanged.
+  - `esp8266_channel_txrx` → `esp_channel_txrx` (for both ESP8266 and ESP32)
+  - `uno_r4_wifi_channel_receiver_txrx` → `uno_r4_wifi_channel_txrx`
+- The notes for earlier versions below keep the names used at the time.
+
 ### 9.14.1
 
 - **Board settings can choose anonymous login (ESP32, ESP8266).** "익명으로 접속" (connect anonymously) on the [board settings page](https://test.iosignal.net/wifi/) makes the board connect without a key even when the sketch sets one (`setKey`). The board stores `-` as the key; clearing the stored key brings the sketch key back. Older firmware refuses this value.

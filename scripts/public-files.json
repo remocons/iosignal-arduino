@@ -1,9 +1,9 @@
 {
   "sync": [
     "examples/esp01_channel_txrx/esp01_channel_txrx.ino",
-    "examples/esp8266_channel_txrx/esp8266_channel_txrx.ino",
+    "examples/esp_channel_txrx/esp_channel_txrx.ino",
     "examples/uno_ethernet_channel_txrx/uno_ethernet_channel_txrx.ino",
-    "examples/uno_r4_wifi_channel_receiver_txrx/uno_r4_wifi_channel_receiver_txrx.ino",
+    "examples/uno_r4_wifi_channel_txrx/uno_r4_wifi_channel_txrx.ino",
     "keywords.txt",
     "src/CongPacket.cpp",
     "src/CongPacket.h",
