@@ -59,7 +59,7 @@ void loop() {
 ```
 
 - `loop()`는 매 반복마다 호출합니다. 연결이 끊기면 3초 뒤 다시 접속합니다.
-- 송신: `signal(tag, ...)`(채널·CID 태그), `signal2(target, topic, ...)`(두 문자열을 이어 붙인 태그, 예: `signal2(cid, "@pong", ...)` → `cid@pong`), `signal_e2e()`(종단간 암호화).
+- 송신: `signal(tag, ...)`(채널·CID 태그), `signal2(target, topic, ...)`(두 문자열을 이어 붙인 태그, 예: `signal2(cid, "@led", ...)` → `cid@led`), `signal_e2e()`(종단간 암호화).
 - 진단: `onError(callback)`은 오류 코드를, `setLog(callback)`은 사람이 읽을 수 있는 안내를 전달합니다.
 
 ## 보드 설정 (ESP32·ESP8266, 9.13.0)
@@ -128,16 +128,6 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.0.0 이상**을 사용합
 
 새 릴리스가 라이브러리 매니저에 등록되기 전에 로컬에서 개발하려면, 업데이트된 `boho-arduino` 라이브러리를 로컬 폴더 또는 ZIP으로 설치하세요. `depends` 항목은 [Arduino 라이브러리 규격](https://docs.arduino.cc/arduino-cli/library-specification/)을 따릅니다.
 
-## 장치 간 ping/pong 예제
-
-ESP32(ESP32-C3 포함) 또는 ESP8266에서 [peer_ping_pong 예제](examples/peer_ping_pong/peer_ping_pong.ino)를 엽니다. 컴파일·업로드하고 USB로 [보드 설정](https://test.iosignal.net/wifi/)에서 Wi-Fi를 넣은 뒤(또는 스케치의 Wi-Fi 값을 수정), 시리얼 모니터를 115200 baud로 열면 장치 CID와 수신 메시지 태그(`[RX]`)를 확인할 수 있습니다.
-
-다른 장치의 ping에는 즉시 응답하며, 이어서 `[TX] @pong -> <sender-cid>`를 출력합니다. 모든 Arduino 예제는 `io.iosignal.net:55488`에 연결합니다. 웹 CLI에서 `open wss://io.iosignal.net/ws`를 실행한 뒤 `ping <arduino-cid>`를 입력하면, CLI에 `pong (<arduino-cid>)`가 출력됩니다.
-
-이 예제는 `onMessage()`에서 직접 전달된 `@ping` TEXT 메시지만 처리합니다. 자신의 CID를 본문으로 담아 송신자 CID에 `@pong`을 즉시 보냅니다. CLI가 보내는 표준 형식인 단일 NUL 종단 TEXT CID 본문을 전제로 합니다.
-
-CID 검증, 시리얼 명령 파서, 응답 대기 또는 시간 초과 처리는 포함하지 않습니다. 채널 구독도 필요하지 않습니다. 로컬 테스트에서는 같은 서버에서 WebSocket(CLI) 포트와 CongSocket(Arduino) 포트를 활성화하세요.
-
 ## 버전별 변경 사항
 
 ### 다음 릴리스 (아직 배포 전)
@@ -145,6 +135,7 @@ CID 검증, 시리얼 명령 파서, 응답 대기 또는 시간 초과 처리�
 - **예제 폴더 이름을 정리했습니다.** 동작은 그대로입니다.
   - `esp8266_channel_txrx` → `esp_channel_txrx` (ESP8266과 ESP32 공용)
   - `uno_r4_wifi_channel_receiver_txrx` → `uno_r4_wifi_channel_txrx`
+- **`peer_ping_pong` 예제를 지웠습니다.** 상대 CID로 `@ping`을 보내 `@pong`을 받는 방식은 라이브러리 기능이 아니라 앱 사이의 약속이었고, 메시지에 적힌 아무 CID로 답하는 문제가 있었습니다. 직접 메시지는 `esp_channel_txrx` 같은 채널 예제와 `io.signal("<cid>@topic", …)`로 확인하세요. CLI(iosignal-cli, remocon, remocon.kr 웹 CLI)의 `ping <cid>`도 없앴고 서버 `ping`은 그대로입니다.
 - 아래 이전 버전 설명의 예제 이름은 그때 이름 그대로입니다.
 
 ### 9.14.1

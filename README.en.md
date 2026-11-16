@@ -59,7 +59,7 @@ void loop() {
 ```
 
 - Call `loop()` on every iteration. After a disconnection it reconnects 3 seconds later.
-- Sending: `signal(tag, ...)` for channel and CID tags, `signal2(target, topic, ...)` for a tag made by joining two strings (e.g. `signal2(cid, "@pong", ...)` → `cid@pong`), and `signal_e2e()` for end-to-end encryption.
+- Sending: `signal(tag, ...)` for channel and CID tags, `signal2(target, topic, ...)` for a tag made by joining two strings (e.g. `signal2(cid, "@led", ...)` → `cid@led`), and `signal_e2e()` for end-to-end encryption.
 - Diagnostics: `onError(callback)` receives error codes, and `setLog(callback)` receives human-readable notes.
 
 ## Board settings (ESP32, ESP8266, 9.13.0)
@@ -128,16 +128,6 @@ IOSignal uses the external Arduino library **Boho 1.0.0 or later**. Boho is not 
 
 To develop locally before a new release reaches the Library Manager, install the updated `boho-arduino` library from a local folder or ZIP. The `depends` field follows the [Arduino library specification](https://docs.arduino.cc/arduino-cli/library-specification/).
 
-## Peer ping/pong example
-
-Open the [peer_ping_pong example](examples/peer_ping_pong/peer_ping_pong.ino) on an ESP32 (including ESP32-C3) or ESP8266. Compile and upload, set Wi-Fi over USB on the [board settings page](https://test.iosignal.net/wifi/) (or replace the Wi-Fi placeholders), then open the Serial Monitor at 115200 baud to see the device CID and received message tags (`[RX]`).
-
-The device answers another device's ping immediately and then prints `[TX] @pong -> <sender-cid>`. All Arduino examples connect to `io.iosignal.net:55488`. In the web CLI, run `open wss://io.iosignal.net/ws` and then `ping <arduino-cid>`; the CLI prints `pong (<arduino-cid>)`.
-
-The example handles only direct `@ping` TEXT messages in `onMessage()`. It immediately sends `@pong` to the sender CID with its own CID as the body, and expects the CLI's standard single NUL-terminated TEXT CID body.
-
-It does not validate CIDs, parse serial commands or handle response waits or timeouts. No channel subscription is needed. For local tests, enable both the WebSocket (CLI) port and the CongSocket (Arduino) port on the same server.
-
 ## Changes by version
 
 ### Next release (not released yet)
@@ -145,6 +135,7 @@ It does not validate CIDs, parse serial commands or handle response waits or tim
 - **Example folders were renamed.** Behaviour is unchanged.
   - `esp8266_channel_txrx` → `esp_channel_txrx` (for both ESP8266 and ESP32)
   - `uno_r4_wifi_channel_receiver_txrx` → `uno_r4_wifi_channel_txrx`
+- **The `peer_ping_pong` example was removed.** Sending `@ping` to a CID and getting `@pong` back was a convention between applications, not a library feature, and it answered whatever CID a message named. Check direct messages with a channel example such as `esp_channel_txrx` and `io.signal("<cid>@topic", …)`. The CLIs (iosignal-cli, remocon, the remocon.kr web CLI) dropped `ping <cid>`; the server `ping` stays.
 - The notes for earlier versions below keep the names used at the time.
 
 ### 9.14.1
