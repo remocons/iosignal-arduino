@@ -130,6 +130,10 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.0.0 이상**을 사용합
 
 ## 버전별 변경 사항
 
+### 다음 버전
+
+- **`esp01_channel_txrx` 예제를 뺐습니다.** ESP-01 예제는 Remocon 라이브러리의 `esp01-relay-button`, `esp01-button-controller`에 있습니다.
+
 ### 9.14.2
 
 - **예제 폴더 이름을 정리했습니다.** 동작은 그대로입니다.

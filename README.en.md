@@ -130,6 +130,10 @@ To develop locally before a new release reaches the Library Manager, install the
 
 ## Changes by version
 
+### Next version
+
+- **The `esp01_channel_txrx` example was removed.** ESP-01 examples are in the Remocon library: `esp01-relay-button` and `esp01-button-controller`.
+
 ### 9.14.2
 
 - **Example folders were renamed.** Behaviour is unchanged.

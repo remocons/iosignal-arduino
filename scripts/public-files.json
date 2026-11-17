@@ -1,6 +1,5 @@
 {
   "sync": [
-    "examples/esp01_channel_txrx/esp01_channel_txrx.ino",
     "examples/esp_channel_txrx/esp_channel_txrx.ino",
     "examples/uno_ethernet_channel_txrx/uno_ethernet_channel_txrx.ino",
     "examples/uno_r4_wifi_channel_txrx/uno_r4_wifi_channel_txrx.ino",
