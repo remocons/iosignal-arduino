@@ -18,7 +18,7 @@ IOSignal은 웹브라우저, Node.js, Arduino 간의 실시간 통신을 지원�
 
 ## 설치
 
-1. Arduino IDE 라이브러리 매니저에서 `IOSignal`을 검색해 설치합니다. 의존 라이브러리 **Boho**(1.0.0 이상), **Crypto**, **Bounce2**도 함께 설치합니다.
+1. Arduino IDE 라이브러리 매니저에서 `IOSignal`을 검색해 설치합니다. 의존 라이브러리 **Boho**(1.1.0 이상), **Crypto**, **Bounce2**도 함께 설치합니다.
 2. 라이브러리 매니저에 새 버전이 반영되기 전에는 [공개 저장소](https://github.com/remocons/iosignal-arduino)의 ZIP을 받아 **Sketch > Include Library > Add .ZIP Library**로 추가합니다.
 3. **File > Examples > IOSignal**에서 보드에 맞는 예제를 엽니다.
 
@@ -124,13 +124,21 @@ void loop() {
 
 ## Boho 의존성
 
-IOSignal은 외부 Arduino 라이브러리인 **Boho 1.0.0 이상**을 사용합니다. Boho 소스는 `src/`에 포함되지 않습니다. IOSignal과 함께 Boho 및 Boho의 의존 라이브러리인 Crypto를 설치하세요. 오래된 사본이 사용되지 않도록 Boho는 하나만 설치해 두세요.
+IOSignal은 외부 Arduino 라이브러리인 **Boho 1.1.0 이상**을 사용합니다. Boho 소스는 `src/`에 포함되지 않습니다. IOSignal과 함께 Boho 및 Boho의 의존 라이브러리인 Crypto를 설치하세요. 오래된 사본이 사용되지 않도록 Boho는 하나만 설치해 두세요.
 
 새 릴리스가 라이브러리 매니저에 등록되기 전에 로컬에서 개발하려면, 업데이트된 `boho-arduino` 라이브러리를 로컬 폴더 또는 ZIP으로 설치하세요. `depends` 항목은 [Arduino 라이브러리 규격](https://docs.arduino.cc/arduino-cli/library-specification/)을 따릅니다.
 
 ## 버전별 변경 사항
 
-### 다음 버전
+### 9.21.0
+
+- **응답 없는 연결을 끊고 다시 연결합니다.** 마지막으로 받은 뒤 `pingPeriod`(50초) 동안 아무것도 오지 않으면 PING을 보내고, 15초 안에 서버에서 아무것도 오지 않으면 연결을 닫고 다시 접속합니다. 전에는 공유기 재시작이나 회선 문제로 연결이 살아 있는 것처럼 보이면 그대로 멈춰 있었습니다. `setLog()`에는 `[IOSignal] no reply from <host>:<port>: reconnecting.`이 나옵니다(UNO 등 AVR에서는 이 줄을 생략).
+- **다시 연결을 기다리는 동안 `loop()`가 멈추지 않습니다.** 전에는 `io.loop()` 안에서 3초를 `delay()`로 기다려 스케치의 버튼, 센서, 보드 설정 처리가 함께 멈췄습니다. 이제 3초마다 한 번 접속을 시도하고 바로 돌아옵니다. 접속 시도(`client.connect()`) 한 번은 여전히 끝날 때까지 기다립니다. 끊긴 동안 3초씩 멈추는 것에 기대던 스케치는 동작이 달라집니다.
+- **Boho 1.1.0 이상이 필요합니다.** 의존성을 `Boho (>=1.1.0)`으로 올렸습니다. 로그인 nonce를 `micros()` 대신 ESP32·ESP8266은 칩의 하드웨어 난수에서, 그 밖의 보드는 모아 둔 타이밍을 키로 해시해 얻습니다. 서버와 프로토콜은 그대로입니다.
+- **UNO(AVR)의 `setLog()` 문구 세 줄이 짧아졌습니다.** 플래시를 아끼려고 뒤쪽 안내 문장("Is it the IOSignal TCP port?" 등)을 뺐습니다. 다른 보드의 문구는 그대로입니다.
+- 예제 `esp32c3_duplicate_login`은 연결이 끊긴 것을 상태가 `IO_CLOSED`로 바뀔 때 셉니다. 출력 문구는 같습니다.
+- **`esp01_channel_txrx` 예제를 뺐습니다.** ESP-01 예제는 Remocon 라이브러리의 `esp01-relay-button`, `esp01-button-controller`에 있습니다.
+- 같은 시점의 공개 iosignal(npm)은 9.21.0입니다. 9.15~9.20 번호의 IOSignal Arduino는 없습니다.
 
 - **`esp01_channel_txrx` 예제를 뺐습니다.** ESP-01 예제는 Remocon 라이브러리의 `esp01-relay-button`, `esp01-button-controller`에 있습니다.
 

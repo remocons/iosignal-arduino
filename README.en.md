@@ -18,7 +18,7 @@ From **9.0.0**, this library uses the same version number as the public [iosigna
 
 ## Installation
 
-1. In the Arduino IDE Library Manager, search for `IOSignal` and install it together with its dependencies **Boho** (1.0.0 or later), **Crypto** and **Bounce2**.
+1. In the Arduino IDE Library Manager, search for `IOSignal` and install it together with its dependencies **Boho** (1.1.0 or later), **Crypto** and **Bounce2**.
 2. Until a new version reaches the Library Manager, download the ZIP from the [public repository](https://github.com/remocons/iosignal-arduino) and add it with **Sketch > Include Library > Add .ZIP Library**.
 3. Open an example for your board from **File > Examples > IOSignal**.
 
@@ -124,15 +124,21 @@ To try it in a browser, use the [IOSignal communication lab](https://test.iosign
 
 ## Boho dependency
 
-IOSignal uses the external Arduino library **Boho 1.0.0 or later**. Boho is not bundled in `src/`. Install Boho and its dependency Crypto together with IOSignal. Keep a single Boho installation so an older copy is not used.
+IOSignal uses the external Arduino library **Boho 1.1.0 or later**. Boho is not bundled in `src/`. Install Boho and its dependency Crypto together with IOSignal. Keep a single Boho installation so an older copy is not used.
 
 To develop locally before a new release reaches the Library Manager, install the updated `boho-arduino` library from a local folder or ZIP. The `depends` field follows the [Arduino library specification](https://docs.arduino.cc/arduino-cli/library-specification/).
 
 ## Changes by version
 
-### Next version
+### 9.21.0
 
+- **A connection the server stopped answering on is dropped and opened again.** When nothing arrived for `pingPeriod` (50 s) the library sends a PING; with nothing from the server in the next 15 s it closes the connection and connects again. Before, a connection that only looked alive (a restarted router, a broken link) stayed stuck. `setLog()` gets `[IOSignal] no reply from <host>:<port>: reconnecting.` (left out on AVR boards such as the UNO).
+- **`loop()` no longer stops while waiting to reconnect.** `io.loop()` used to `delay()` for 3 s, which also stopped the sketch's buttons, sensors and board settings. It now tries once every 3 s and returns at once. One attempt (`client.connect()`) still blocks until it ends. A sketch that relied on the 3 s pause while disconnected behaves differently.
+- **Boho 1.1.0 or later is required.** The dependency is now `Boho (>=1.1.0)`. The login nonce no longer comes from `micros()`: ESP32 and ESP8266 use the chip's hardware random numbers, other boards a keyed hash of gathered timing. The server and the protocol are unchanged.
+- **Three `setLog()` lines are shorter on the UNO (AVR).** The trailing hints ("Is it the IOSignal TCP port?" and the like) are left out to save flash. Other boards print the same text as before.
+- The `esp32c3_duplicate_login` example counts a lost connection when the state changes to `IO_CLOSED`. Its output is the same.
 - **The `esp01_channel_txrx` example was removed.** ESP-01 examples are in the Remocon library: `esp01-relay-button` and `esp01-button-controller`.
+- The public iosignal (npm) of the same time is 9.21.0. There is no IOSignal Arduino numbered 9.15 to 9.20.
 
 ### 9.14.2
 

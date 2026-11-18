@@ -97,11 +97,11 @@ void onReady()
   Serial.println(io.cid);
 }
 
-// io.loop() reconnects inside one call, so a new attempt shows up as a change to IO_OPEN.
+// io.loop() waits before it connects again, so a lost connection shows up as a change to IO_CLOSED.
 void watchConnection()
 {
   if (io.state == lastState) return;
-  if (io.state == IO_OPEN && lastState != IO_CLOSED)
+  if (io.state == IO_CLOSED && lastState != IO_STOP)
   {
     if (readySinceOpen)
     {

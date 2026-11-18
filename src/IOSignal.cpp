@@ -23,12 +23,21 @@ void IOSignal::loop()
   refreshTime();
 
   if( !this->client->connected()){
-      state = IO_CLOSED;
+      // Not delay(): the sketch's own loop (buttons, sensors) keeps running until the next attempt,
+      // RECONNECT_WAIT_MS after the connection was lost or the last attempt failed.
+      if (state != IO_CLOSED) {
+        state = IO_CLOSED;
+        clear();
+        retryAt = millis();
+      }
+      if (millis() - retryAt < RECONNECT_WAIT_MS) return;
+      retryAt = millis();
       clear();
-      delay(3000); 
       if(this->client->connect( _host , _port) ){
         state = IO_OPEN;
         openedAt = millis();
+        lastRxMs = openedAt;
+        pingPending = false;
         connectFailLogged = false;
       } else if (!connectFailLogged) {
         connectFailLogged = true;
@@ -40,16 +49,31 @@ void IOSignal::loop()
   // Connected, but the server never said hello: not an IOSignal TCP port (a web or WebSocket port,
   // another service). Drop it and retry instead of waiting forever.
   if (state == IO_OPEN && millis() - openedAt > SERVER_HELLO_TIMEOUT_MS) {
-    logLine(IOS_TEXT("[IOSignal] no reply from %s:%u in 10 s. Is it the IOSignal TCP port?"), _host ? _host : "", (unsigned)_port);
+    logLine(IOS_HINT("[IOSignal] no reply from %s:%u in 10 s.", " Is it the IOSignal TCP port?"), _host ? _host : "", (unsigned)_port);
     this->client->stop();
     state = IO_CLOSED;
     return;
   }
 
-  if ((getUnixTime() - lastTxRxTime) > pingPeriod)
+  // The server answered nothing since our PING: the connection is dead although it still looks
+  // connected. Drop it; the next loop() connects again.
+  if (pingPending && millis() - pingSentMs > PONG_TIMEOUT_MS) {
+#if !defined(__AVR__) // an Uno sketch has no flash to spare for this line; the reconnect shows in the sketch's own log
+    logLine(IOS_TEXT("[IOSignal] no reply from %s:%u: reconnecting."), _host ? _host : "", (unsigned)_port);
+#endif
+    pingPending = false;
+    this->client->stop();
+    state = IO_CLOSED;
+    return;
+  }
+
+  // Follows what was received: sending does not show the server is there.
+  if (!pingPending && millis() - lastRxMs > pingPeriod * 1000UL)
   {
     ping();
-    lastTxRxTime = getUnixTime();
+    if (state == IO_CLOSED) return; // the write failed
+    pingSentMs = millis();
+    pingPending = true;
   }
 
   cong.run();
@@ -72,6 +96,8 @@ void IOSignal::loop()
   if (!cong._buffer || !cong._payloadLength) { cong.clear(); return; }
 
   lastTxRxTime = getUnixTime();
+  lastRxMs = millis();
+  pingPending = false;
 
   uint8_t *tmpbuf = NULL;
   uint32_t len = cong._payloadLength;
@@ -256,6 +282,8 @@ void IOSignal::loop()
       if( this->client->connect( ipString , port ) ){
         state = IO_OPEN;
         openedAt = millis();
+        lastRxMs = openedAt;
+        pingPending = false;
       }
       if (tmpbuf != NULL) free(tmpbuf);
       return;
@@ -277,7 +305,7 @@ void IOSignal::loop()
     {
       isAuthorized = false;
       state = IO_AUTH_FAIL;
-      logLine(IOS_TEXT("[IOSignal] server reply to the device key did not verify at %s:%u. Wrong server for this key?"), _host ? _host : "", (unsigned)_port);
+      logLine(IOS_HINT("[IOSignal] server reply to the device key did not verify at %s:%u.", " Wrong server for this key?"), _host ? _host : "", (unsigned)_port);
       if (errorCallback) {
           errorCallback( IO_AUTH_FAIL);
       }
@@ -289,7 +317,7 @@ void IOSignal::loop()
   case Boho::MsgType::AUTH_FAIL:
     isAuthorized = false;
     state = IO_AUTH_FAIL;
-    logLine(IOS_TEXT("[IOSignal] device key refused by %s:%u. Is the key registered on this server?"), _host ? _host : "", (unsigned)_port);
+    logLine(IOS_HINT("[IOSignal] device key refused by %s:%u.", " Is the key registered on this server?"), _host ? _host : "", (unsigned)_port);
     // Serial.println(F(">> AUTH_FAIL"));
     if (errorCallback) {
         errorCallback( IO_AUTH_FAIL);

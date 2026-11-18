@@ -11,14 +11,21 @@
 #if defined(__AVR__)
 #include <avr/pgmspace.h>
 #define IOS_TEXT(s) PSTR(s)
+// A log line with a hint: an Uno sketch has no flash to spare for the hint.
+#define IOS_HINT(text, hint) PSTR(text)
 #else
 #define IOS_TEXT(s) (s)
+#define IOS_HINT(text, hint) (text hint)
 #endif
 
 #define DEFAULT_TX_BUF_SIZE 50
 #define DEFAULT_RX_BUF_SIZE 80 // used by begin() when setRxBuffer() was not called
 // A connection that gets no server hello in this time is dropped and retried (wrong port, other service).
 #define SERVER_HELLO_TIMEOUT_MS 10000
+#define RECONNECT_WAIT_MS 3000 // between a lost connection (or a failed attempt) and the next attempt
+// After a PING (sent when nothing was received for pingPeriod): with nothing from the server in this
+// time the connection is dropped and opened again. A lost Wi-Fi link can leave it looking connected.
+#define PONG_TIMEOUT_MS 15000
 #define MAX_CID_LEN 12
 #define MAX_REASON_LEN 32
 
@@ -170,6 +177,10 @@ public:
   const char *_host = nullptr;
   uint16_t _port = 55488L;
   uint32_t openedAt = 0;          // millis() when the TCP connection opened
+  uint32_t lastRxMs = 0;          // millis() when the last message arrived
+  uint32_t pingSentMs = 0;        // millis() of a PING not answered yet
+  bool pingPending = false;
+  uint32_t retryAt = 0;           // millis() when the connection was found closed, or of the last attempt
   bool connectFailLogged = false; // one log line per run of failed connects
   // printf-style log line for setLog(); format is IOS_TEXT(...). Does nothing without a log callback.
   void logLine(const char *format, ...);
