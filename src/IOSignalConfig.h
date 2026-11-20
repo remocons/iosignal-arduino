@@ -117,7 +117,7 @@ class IOSignalConfig {
       out().print(F("Wi-Fi: using the stored SSID "));
       out().println(storedSSID());
     } else {
-      out().println(F("Wi-Fi: not set. Connect USB and open https://test.iosignal.net/wifi/"));
+      out().println(F("Wi-Fi: not set. Connect USB and open https://arduino.iosignal.net/wifi/"));
     }
   }
 

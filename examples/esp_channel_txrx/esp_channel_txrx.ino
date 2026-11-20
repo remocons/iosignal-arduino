@@ -6,16 +6,16 @@
   An example of communicating between Arduinos and controlling them with a webapp.
     1. change the LED_PIN and BUTTON_PIN numbers according to your board.
     2. compile and upload to Arduino.
-    3. set Wi-Fi over USB on https://test.iosignal.net/wifi/ (the board keeps it), or write it in WIFI_SSID and WIFI_PASS below.
+    3. set Wi-Fi over USB on https://arduino.iosignal.net/wifi/ (the board keeps it), or write it in WIFI_SSID and WIFI_PASS below.
        The same page can set another IOSignal server (host:port) and a device key; the server below is the default.
-    4. Access https://test.iosignal.net with a modern web browser.
+    4. Access https://lab.iosignal.net/channel/ with a modern web browser.
 
   [kr] 아두이노들간의 통신과 웹앱으로 제어하는 예제입니다.
     1. 보드에 따라 LED_PIN과 BUTTON_PIN 번호를 변경하세요.
     2. 아두이노에 컴파일하고 업로딩합니다.
-    3. USB로 연결해 https://test.iosignal.net/wifi/ 에서 Wi-Fi를 넣습니다(보드가 저장). 또는 아래 WIFI_SSID, WIFI_PASS에 씁니다.
+    3. USB로 연결해 https://arduino.iosignal.net/wifi/ 에서 Wi-Fi를 넣습니다(보드가 저장). 또는 아래 WIFI_SSID, WIFI_PASS에 씁니다.
        같은 페이지에서 다른 IOSignal 서버(호스트:포트)와 장치 키도 넣을 수 있고, 아래 서버는 기본값입니다.
-    4. 모던 웹브라우저로 https://test.iosignal.net 에 접속하세요.
+    4. 모던 웹브라우저로 https://lab.iosignal.net/channel/ 에 접속하세요.
  */
 
 #if defined(ESP8266)

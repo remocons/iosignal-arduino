@@ -7,7 +7,7 @@
   It needs an IOSignal server you run yourself and a device key registered on it: ID_KEY below
   ("did.key") is a placeholder, and the public io.iosignal.net does not issue keys.
     1. Set Wi-Fi, a registered device key ("did.key") and the server over USB on
-       https://test.iosignal.net/wifi/ (the board keeps them), or write WIFI_SSID / WIFI_PASSWORD,
+       https://arduino.iosignal.net/wifi/ (the board keeps them), or write WIFI_SSID / WIFI_PASSWORD,
        ID_KEY and the server below; values set over USB win over the sketch.
     2. Arduino IDE: board "ESP32C3 Dev Module", "USB CDC On Boot: Enabled" so Serial
        prints over the USB port. Upload and open the Serial Monitor at 115200 baud.
@@ -25,7 +25,7 @@
   [kr] 같은 ID로 다른 곳에서 로그인했을 때 이 보드에 출력되는 내용을 확인하는 예제입니다.
   직접 운영하는 IOSignal 서버와 그 서버에 등록한 장치 키가 필요합니다. 아래 ID_KEY("did.key")는
   가짜 값이고, 공개 서버 io.iosignal.net은 장치 키를 발급하지 않습니다.
-    1. USB로 연결해 https://test.iosignal.net/wifi/ 에서 Wi-Fi, 등록한 장치 키("did.key"), 서버를 넣습니다(보드가 저장).
+    1. USB로 연결해 https://arduino.iosignal.net/wifi/ 에서 Wi-Fi, 등록한 장치 키("did.key"), 서버를 넣습니다(보드가 저장).
        또는 아래 WIFI_SSID / WIFI_PASSWORD, ID_KEY, 서버 주소에 씁니다. USB로 넣은 값이 우선합니다.
     2. Arduino IDE에서 보드 "ESP32C3 Dev Module", "USB CDC On Boot: Enabled"를 선택해야
        USB로 시리얼 출력이 보입니다. 업로드 후 시리얼 모니터(115200)를 엽니다.
