@@ -150,12 +150,13 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.1.0 이상**을 사용합
 
 ## 버전별 변경 사항
 
-### 다음 버전 (배포 전)
+### 9.23.0
 
 - **Remocon 예제를 모두 이 라이브러리로 옮겼습니다.** [remocon-arduino](https://github.com/remocons/remocon-arduino) 9.22.0에 있던 예제 22개가 **File > Examples > IOSignal**에 들어 있습니다. 예제 이름은 그대로입니다. remocon-arduino는 그대로 남지만 새 예제는 이 저장소에만 더합니다.
 - **도우미 헤더 이름이 바뀌었습니다.** `RemoconUi.h` → `IOSignalUi.h`, `RemoconBinding.h` → `IOSignalBinding.h`, `RemoconButtons.h` → `IOSignalButtons.h`(클래스 `RemoconButtons` → `IOSignalButtons`). 함수와 동작은 같습니다. Remocon 라이브러리의 헤더를 쓰던 스케치는 `#include`와 클래스 이름만 바꾸면 됩니다.
 - 의존성은 그대로(Boho, Crypto, Bounce2)입니다. FastLED, U8g2, IRremote, Ethernet은 그 라이브러리를 쓰는 예제에만 필요하므로 따로 설치합니다.
 - 예제 안내 사이트를 [arduino.iosignal.net](https://arduino.iosignal.net/)으로 합쳤습니다(예전 test.iosignal.net과 arduino.remocon.kr). `IOSignalConfig.h`의 Wi-Fi 안내 문구도 `https://arduino.iosignal.net/wifi/`를 가리킵니다.
+- 같은 시점의 공개 iosignal(npm)은 9.23.0입니다. 9.22.0 번호의 IOSignal Arduino는 없습니다.
 
 ### 9.21.0
 

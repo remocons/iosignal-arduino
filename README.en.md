@@ -150,12 +150,13 @@ To develop locally before a new release reaches the Library Manager, install the
 
 ## Changes by version
 
-### Next version (unreleased)
+### 9.23.0
 
 - **Every Remocon example moved into this library.** The 22 examples of [remocon-arduino](https://github.com/remocons/remocon-arduino) 9.22.0 are under **File > Examples > IOSignal** with the same names. remocon-arduino stays as it is; new examples are added only here.
 - **The helper headers were renamed.** `RemoconUi.h` → `IOSignalUi.h`, `RemoconBinding.h` → `IOSignalBinding.h`, `RemoconButtons.h` → `IOSignalButtons.h` (class `RemoconButtons` → `IOSignalButtons`). Functions and behavior are the same; a sketch that used the Remocon headers changes only its `#include` lines and the class name.
 - Dependencies are unchanged (Boho, Crypto, Bounce2). FastLED, U8g2, IRremote and Ethernet are needed only by the examples that use them; install them separately.
 - The example site is now [arduino.iosignal.net](https://arduino.iosignal.net/) (formerly test.iosignal.net and arduino.remocon.kr). The Wi-Fi hint in `IOSignalConfig.h` points to `https://arduino.iosignal.net/wifi/`.
+- The public iosignal (npm) of the same time is 9.23.0. There is no IOSignal Arduino numbered 9.22.0.
 
 ### 9.21.0
 
