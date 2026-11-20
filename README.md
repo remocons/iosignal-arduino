@@ -109,7 +109,7 @@ void loop() {
 | 그룹 채널 | `esp32-group-led`, `wifi-simple` | |
 | UNO | `uno-ethernet-button`, `uno-ethernet-ir`, `uno-r4-wifi-heart` | Ethernet, (IR: IRremote) |
 
-장치 예제는 [remocon.kr](https://remocon.kr/) 같은 웹앱이 찾아 카드로 보여 주고 제어합니다. 이름(`$name`), 화면(`$ui`), 상태(`$state`)를 알리는 규칙은 [장치 만들기 (remocon.kr 호환)](https://iosignal.net/docs/arduino/remocon-device)에 있습니다. 예제들이 함께 쓰는 도우미 헤더는 다음과 같습니다.
+장치 예제는 [remocon.kr](https://remocon.kr/) 같은 웹앱이 찾아 카드로 보여 주고 제어합니다. 이름(`$name`), 화면(`$ui`), 상태(`$state`)를 알리는 규칙은 [장치 만들기 (remocon.kr 호환)](https://docs.iosignal.net/docs/arduino/remocon-device)에 있습니다. 예제들이 함께 쓰는 도우미 헤더는 다음과 같습니다.
 
 - `IOSignalUi.h`: `$name`(`이름:분류`)과 `$ui` 만들기·읽기(`formatName()`, `formatNameSetting()`, `nameOf()`, `categoryOf()`, `isExtendedUi()`).
 - `IOSignalBinding.h`, `IOSignalButtons.h`: 제어기 버튼마다 할 일을 보드 설정(`b1`~`b7`)으로 정하고, 대상 장치의 상태를 구독해 토글합니다(ESP32·ESP8266).
@@ -125,11 +125,11 @@ void loop() {
 
 - `auth("ID.KEY")` 또는 `auth(id, key)`로 인증 정보를 설정하면 접속할 때마다 로그인합니다. 인증 실패 시 인증 상태를 해제한 뒤 `onError`를 호출합니다.
 - 같은 ID로 다른 장치가 로그인해 서버가 이 연결을 교체하면(`AUTH_CLEAR`), 인증 정보를 지우고 **`IO_STOP` 상태로 멈춥니다**. 익명으로 다시 접속하지 않습니다. 사유는 `io.lastReason`과 `setLog`로 확인하고, 다시 시작하려면 `auth()`와 `begin()`을 호출합니다.
-- 예제: [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). 서버의 중복 로그인 정책은 [서버 인증 설정](https://iosignal.net/docs/server/authentication#duplicate-login)을 참고하세요.
+- 예제: [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). 서버의 중복 로그인 정책은 [서버 인증 설정](https://docs.iosignal.net/docs/server/authentication#duplicate-login)을 참고하세요.
 
 ## 문서와 관련 패키지
 
-[IOSignal 문서 사이트 — iosignal.net](https://iosignal.net/)에서 설치, 통신 개념, 서버 구성, 브라우저·Arduino 연동과 예제를 확인할 수 있습니다. 처음 시작한다면 [5분 빠른 시작](https://iosignal.net/docs/start/quickstart/)을 참고하세요.
+[IOSignal 문서 사이트 — iosignal.net](https://iosignal.net/)에서 설치, 통신 개념, 서버 구성, 브라우저·Arduino 연동과 예제를 확인할 수 있습니다. 처음 시작한다면 [5분 빠른 시작](https://docs.iosignal.net/docs/start/quickstart/)을 참고하세요.
 
 | 패키지 | 역할 |
 | --- | --- |
@@ -140,7 +140,7 @@ void loop() {
 | [boho-arduino](https://github.com/remocons/boho-arduino) | Arduino용 Boho 구현. 이 라이브러리의 인증·암호화 의존성 |
 | [remocon-arduino](https://github.com/remocons/remocon-arduino) | 예전 Remocon 예제 라이브러리(9.22.0). 예제는 이 저장소로 옮겨 왔습니다 |
 
-예제 안내와 펌웨어 설치는 [arduino.iosignal.net](https://arduino.iosignal.net/)을, 장치 검색·제어는 [Remocon 웹앱](https://remocon.kr/)을 이용하세요. [보드별 실습 안내](https://iosignal.net/docs/examples/workbench/start)에서 연결 순서를 확인할 수 있습니다.
+예제 안내와 펌웨어 설치는 [arduino.iosignal.net](https://arduino.iosignal.net/)을, 장치 검색·제어는 [Remocon 웹앱](https://remocon.kr/)을 이용하세요. [보드별 실습 안내](https://docs.iosignal.net/docs/examples/workbench/start)에서 연결 순서를 확인할 수 있습니다.
 
 ## Boho 의존성
 

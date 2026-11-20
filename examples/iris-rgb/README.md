@@ -44,7 +44,7 @@ iris 보드의 RGB LED 4개를 하나씩 색상(hue)과 밝기로 제어합니�
 
 ## 참고
 
-- 앱 화면은 공식 타입 iris.2입니다(https://iosignal.net/docs/devices/types/iris.2). 색상은 hue 슬라이더, 밝기는 0~100 슬라이더이며 LED별 켜기 스위치는 없습니다.
+- 앱 화면은 공식 타입 iris.2입니다(https://docs.iosignal.net/docs/devices/types/iris.2). 색상은 hue 슬라이더, 밝기는 0~100 슬라이더이며 LED별 켜기 스위치는 없습니다.
 - 각 보드는 일반 장치입니다. 그룹 번호는 버튼으로 함께 켜고 끄는 데만 쓰며, 앱의 그룹 카드는 없습니다.
 - Wi-Fi 절전을 끄고 TCP 지연 전송을 끕니다. 시리얼 로그는 115200이며, 보드 USB로 보려면 CDCOnBoot=cdc로 컴파일합니다.
 - 색상은 채도 100%의 hue만 고릅니다. 흰색은 낼 수 없습니다.

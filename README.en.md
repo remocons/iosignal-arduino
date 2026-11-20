@@ -109,7 +109,7 @@ Parts, wiring, steps, browser firmware install and board settings for each examp
 | Group channels | `esp32-group-led`, `wifi-simple` | |
 | UNO | `uno-ethernet-button`, `uno-ethernet-ir`, `uno-r4-wifi-heart` | Ethernet, (IR: IRremote) |
 
-Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and show each as a card. The rules for announcing the name (`$name`), screen (`$ui`) and state (`$state`) are in [Building a device (remocon.kr compatible)](https://iosignal.net/en/docs/arduino/remocon-device). The examples share these helper headers:
+Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and show each as a card. The rules for announcing the name (`$name`), screen (`$ui`) and state (`$state`) are in [Building a device (remocon.kr compatible)](https://docs.iosignal.net/en/docs/arduino/remocon-device). The examples share these helper headers:
 
 - `IOSignalUi.h`: builds and reads `$name` (`name:category`) and `$ui` (`formatName()`, `formatNameSetting()`, `nameOf()`, `categoryOf()`, `isExtendedUi()`).
 - `IOSignalBinding.h`, `IOSignalButtons.h`: what each controller button does comes from board settings (`b1` to `b7`); the controller subscribes to the target's state and toggles it (ESP32, ESP8266).
@@ -125,11 +125,11 @@ Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and 
 
 - Set credentials with `auth("ID.KEY")` or `auth(id, key)`, and the client logs in on every connection. On an authentication failure it clears the authentication state before calling `onError`.
 - If another device logs in with the same ID and the server replaces this connection (`AUTH_CLEAR`), the client clears its credentials and **stops in the `IO_STOP` state**. It does not reconnect anonymously. Check the reason with `io.lastReason` and `setLog`; call `auth()` and `begin()` to start again.
-- Example: [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). For the server's duplicate login policy, see [server authentication](https://iosignal.net/en/docs/server/authentication#duplicate-login).
+- Example: [esp32c3_duplicate_login](examples/esp32c3_duplicate_login/esp32c3_duplicate_login.ino). For the server's duplicate login policy, see [server authentication](https://docs.iosignal.net/en/docs/server/authentication#duplicate-login).
 
 ## Documentation and related packages
 
-[IOSignal documentation — iosignal.net](https://iosignal.net/en/) covers installation, concepts, server configuration, browser and Arduino integration, and examples. New users can start with the [five-minute quickstart](https://iosignal.net/en/docs/start/quickstart/).
+[IOSignal documentation — iosignal.net](https://iosignal.net/en/) covers installation, concepts, server configuration, browser and Arduino integration, and examples. New users can start with the [five-minute quickstart](https://docs.iosignal.net/en/docs/start/quickstart/).
 
 | Package | Role |
 | --- | --- |
@@ -140,7 +140,7 @@ Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and 
 | [boho-arduino](https://github.com/remocons/boho-arduino) | Arduino implementation of Boho, the authentication and encryption dependency of this library |
 | [remocon-arduino](https://github.com/remocons/remocon-arduino) | The former Remocon example library (9.22.0). Its examples moved to this repository |
 
-For example guides and firmware install, use [arduino.iosignal.net](https://arduino.iosignal.net/). For device discovery and control, use the [Remocon web app](https://remocon.kr/). The [board workbench guide](https://iosignal.net/en/docs/examples/workbench/start) shows the connection steps.
+For example guides and firmware install, use [arduino.iosignal.net](https://arduino.iosignal.net/). For device discovery and control, use the [Remocon web app](https://remocon.kr/). The [board workbench guide](https://docs.iosignal.net/en/docs/examples/workbench/start) shows the connection steps.
 
 ## Boho dependency
 
