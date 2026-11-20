@@ -35,7 +35,7 @@
 #include "IOSignalImprov.h"
 #include "IOSignalSettings.h"
 
-#define IOSIGNAL_VERSION "9.23.0"
+#define IOSIGNAL_VERSION "9.23.1"
 
 class IOSignalConfig;
 
