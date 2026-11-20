@@ -109,7 +109,7 @@ void loop() {
 | 그룹 채널 | `esp32-group-led`, `wifi-simple` | |
 | UNO | `uno-ethernet-button`, `uno-ethernet-ir`, `uno-r4-wifi-heart` | Ethernet, (IR: IRremote) |
 
-장치 예제는 [remocon.kr](https://remocon.kr/) 같은 웹앱이 찾아 카드로 보여 주고 제어합니다. 이름(`$name`), 화면(`$ui`), 상태(`$state`)를 알리는 규칙은 [Remocon 장치 만들기](https://iosignal.net/docs/arduino/remocon-device)에 있습니다. 예제들이 함께 쓰는 도우미 헤더는 다음과 같습니다.
+장치 예제는 [remocon.kr](https://remocon.kr/) 같은 웹앱이 찾아 카드로 보여 주고 제어합니다. 이름(`$name`), 화면(`$ui`), 상태(`$state`)를 알리는 규칙은 [장치 만들기 (remocon.kr 호환)](https://iosignal.net/docs/arduino/remocon-device)에 있습니다. 예제들이 함께 쓰는 도우미 헤더는 다음과 같습니다.
 
 - `IOSignalUi.h`: `$name`(`이름:분류`)과 `$ui` 만들기·읽기(`formatName()`, `formatNameSetting()`, `nameOf()`, `categoryOf()`, `isExtendedUi()`).
 - `IOSignalBinding.h`, `IOSignalButtons.h`: 제어기 버튼마다 할 일을 보드 설정(`b1`~`b7`)으로 정하고, 대상 장치의 상태를 구독해 토글합니다(ESP32·ESP8266).
