@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon Example. 
+ *  IOSignal device example. 
  *  Arduino Uno + Ethernet shield W5100 + IR Receiver
  *  https://github.com/remocons/iosignal-arduino
  *
@@ -63,7 +63,7 @@ void setup()
   Serial.println(Ethernet.localIP());
 
   io.setRxBuffer(80);
-  io.begin(&client, "io.remocon.kr", 55488 );
+  io.begin(&client, "io.iosignal.net", 55488 );
   io.onReady(&onReady);
   io.onMessage(&onMessage);
   // io.auth("ID_KEY"); // Optional: use your own device key ("id.key"). The sketch still fits an Uno with it.

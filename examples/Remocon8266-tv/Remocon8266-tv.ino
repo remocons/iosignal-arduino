@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: Remocon8266 TV remote (controls a bayo.tv screen, state on the OLED)
+ *  IOSignal device example: Remocon8266 TV remote (controls a bayo.tv screen, state on the OLED)
  *
  *  The four buttons send commands to a bayo.tv screen (https://bayo.tv) by its CID, and the
  *  screen's state (playing or paused, volume, mute, shuffle, title) is drawn on the OLED.
@@ -48,7 +48,7 @@
 #define WIFI_ID  "WIFI_SSID"
 #define WIFI_KEY "WIFI_PASS"
 
-#define SERVER_URL "io.remocon.kr"
+#define SERVER_URL "io.iosignal.net"
 #define SERVER_PORT 55488
 
 IOSignalConfig config;
@@ -91,7 +91,7 @@ uint8_t titlePage = 0;
 
 void sendInfo() {
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Remocon8266 TV");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Remocon8266 TV");
   io.signal("@$name", name);
   // The card's buttons are bayo.tv commands: this board sends them on to the screen.
   io.signal("@$ui", "playToggle,left,right,down,vol+,vol-,mute");

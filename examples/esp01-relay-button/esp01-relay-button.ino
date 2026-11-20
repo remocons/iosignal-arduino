@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: ESP-01 relay and button
+ *  IOSignal device example: ESP-01 relay and button
  *
  *  remocon.kr shows it as a 2-way switch (switch2.1):
  *    s1 = relay on GPIO0, s2 = LED on GPIO1 (both active low).
@@ -46,7 +46,7 @@ IOSignalSetting nameSetting(config, "name", "Name & category (name:category)", "
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP01-Relay-Btn");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP01-Relay-Btn");
   io.signal("@$name", name);
   io.signal("@$ui", "t=switch2.1");
 }
@@ -125,7 +125,7 @@ void setup() {
   config.begin( "ESP01-Relay-Btn", WIFI_SSID, WIFI_PASS );
   nameSetting.maxLength(64);
   nameSetting.onChange([](const char*) { if (io.state == IO_READY) sendInfo(); });
-  config.setServer( "io.remocon.kr", 55488 );
+  config.setServer( "io.iosignal.net", 55488 );
 
   // You can't use Serial-tx and the LED together: serial only in setup mode.
   // GPIO2 must be HIGH at reset, so the button is read after boot, not during it.

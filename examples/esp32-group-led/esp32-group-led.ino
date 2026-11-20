@@ -1,5 +1,5 @@
 /*
-  ESP32: Remocon group channel control. Two boards share the #lab group,
+  ESP32: group channel control (remocon.kr). Two boards share the #lab group,
   which remocon.kr shows as one 2-way switch card (switch2.1).
   Wiring: GPIO 4 -> 330 ohm resistor -> LED anode; LED cathode -> GND.
   Upload the same sketch to two boards. Over USB on https://arduino.iosignal.net/wifi/ set Wi-Fi,
@@ -14,7 +14,7 @@
 
 const char* WIFI_SSID = "WIFI_SSID";
 const char* WIFI_PASS = "WIFI_PASS";
-const char* IO_HOST = "io.remocon.kr";
+const char* IO_HOST = "io.iosignal.net";
 const uint16_t IO_PORT = 55488;
 const uint8_t LED_PIN = 4;
 
@@ -34,7 +34,7 @@ IOSignalSetting nameSetting(config, "name", "Name & category (name:category)", "
 void sendInfo() {
   // Both members send the same $name and $ui; a group's $ui is the extended form (t=…), device rules v2.
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32 LEDs");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32 LEDs");
   io.signal(GROUP_NAME_TAG, name);
   io.signal(GROUP_UI_TAG, "t=switch2.1");
 }

@@ -43,7 +43,7 @@ IOSignalButtons buttons(io, target, BUTTONS, 2);
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Button Control");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Button Control");
   io.signal("@$name", name);
   io.signal("@$ui", "b1,b2");
 }
@@ -85,7 +85,7 @@ void setup() {
   config.begin(Serial, "Button Control", WIFI_SSID, WIFI_PASS);
   nameSetting.maxLength(64);
   nameSetting.onChange([](const char*) { if (io.state == IO_READY) sendInfo(); });
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
   config.printServer();
 
   buttons.onLog([](const char* line) { Serial.println(line); });

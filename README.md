@@ -150,6 +150,12 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.1.0 이상**을 사용합
 
 ## 버전별 변경 사항
 
+### 다음 버전 (배포 전)
+
+- **도우미 이름공간이 `iosignal`이 되었습니다.** `IOSignalUi.h`, `IOSignalBinding.h`의 함수와 상수는 `iosignal::formatNameSetting()`처럼 씁니다. 9.23.0까지의 `remocon::`은 같은 이름공간의 별칭으로 남겨 두어 그대로 컴파일됩니다(예전 Remocon 라이브러리의 `RemoconUi.h`와 한 스케치에 함께 넣을 수는 없습니다).
+- **예제의 기본 서버가 `io.iosignal.net`입니다.** 전에는 `io.remocon.kr`이었고 같은 브로커이므로 동작은 같습니다. 보드 설정에 저장한 서버는 그대로 씁니다.
+- 예제 머리 주석의 "Remocon example"을 "device example"로 바꿨습니다.
+
 ### 9.23.0
 
 - **Remocon 예제를 모두 이 라이브러리로 옮겼습니다.** [remocon-arduino](https://github.com/remocons/remocon-arduino) 9.22.0에 있던 예제 22개가 **File > Examples > IOSignal**에 들어 있습니다. 예제 이름은 그대로입니다. remocon-arduino는 그대로 남지만 새 예제는 이 저장소에만 더합니다.
@@ -165,10 +171,9 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.1.0 이상**을 사용합
 - **Boho 1.1.0 이상이 필요합니다.** 의존성을 `Boho (>=1.1.0)`으로 올렸습니다. 로그인 nonce를 `micros()` 대신 ESP32·ESP8266은 칩의 하드웨어 난수에서, 그 밖의 보드는 모아 둔 타이밍을 키로 해시해 얻습니다. 서버와 프로토콜은 그대로입니다.
 - **UNO(AVR)의 `setLog()` 문구 세 줄이 짧아졌습니다.** 플래시를 아끼려고 뒤쪽 안내 문장("Is it the IOSignal TCP port?" 등)을 뺐습니다. 다른 보드의 문구는 그대로입니다.
 - 예제 `esp32c3_duplicate_login`은 연결이 끊긴 것을 상태가 `IO_CLOSED`로 바뀔 때 셉니다. 출력 문구는 같습니다.
-- **`esp01_channel_txrx` 예제를 뺐습니다.** ESP-01 예제는 Remocon 라이브러리의 `esp01-relay-button`, `esp01-button-controller`에 있습니다.
+- **`esp01_channel_txrx` 예제를 뺐습니다.** ESP-01 예제는 `esp01-relay-button`, `esp01-button-controller`입니다(그때는 Remocon 라이브러리, 9.23.0부터 이 라이브러리).
 - 같은 시점의 공개 iosignal(npm)은 9.21.0입니다. 9.15~9.20 번호의 IOSignal Arduino는 없습니다.
 
-- **`esp01_channel_txrx` 예제를 뺐습니다.** ESP-01 예제는 Remocon 라이브러리의 `esp01-relay-button`, `esp01-button-controller`에 있습니다.
 
 ### 9.14.2
 

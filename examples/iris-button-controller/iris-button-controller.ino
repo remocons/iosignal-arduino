@@ -41,7 +41,7 @@ CRGB leds[4];
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Iris Button Control");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Iris Button Control");
   io.signal("@$name", name);
   io.signal("@$ui", "b1,b2");
 }
@@ -49,11 +49,11 @@ void sendInfo() {
 // The target's first four channel keys on the four LEDs; all dark while its state is unknown.
 void showTarget() {
   const char* state = buttons.state();
-  char keys[4][remocon::KEY_MAX + 1];
-  size_t n = state ? remocon::channelKeys(state, keys, 4) : 0;
+  char keys[4][iosignal::KEY_MAX + 1];
+  size_t n = state ? iosignal::channelKeys(state, keys, 4) : 0;
   for (uint8_t i = 0; i < 4; i++) {
     char v[2] = "0";
-    if (i < n) remocon::stateValue(state, keys[i], v, sizeof(v));
+    if (i < n) iosignal::stateValue(state, keys[i], v, sizeof(v));
     leds[i] = i < n && v[0] == '1' ? CRGB(100, 80, 50) : CRGB::Black;
   }
   FastLED.show();
@@ -104,7 +104,7 @@ void setup() {
   config.begin(Serial, "Iris Button Control", WIFI_SSID, WIFI_PASS);
   nameSetting.maxLength(64);
   nameSetting.onChange([](const char*) { if (io.state == IO_READY) sendInfo(); });
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
   config.printServer();
   WiFi.setTxPower(WIFI_POWER_8_5dBm);  // Small ESP32-C3 boards drop sent packets at full power (antenna).
   WiFi.setSleep(false);                // Power save delays incoming signals by 100-800 ms.

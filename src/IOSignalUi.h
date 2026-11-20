@@ -7,8 +7,8 @@
 //          "t=iris.2;p=1;v=1;b=on,off" (t official type, p=1 screen on $panel, v=1 picture on $view, b buttons)
 //
 //   char name[64];
-//   remocon::formatName(name, sizeof(name), "Iris Basic", "HOME");                 // "Iris Basic:HOME"
-//   remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Iris Basic"); // the board setting "name"
+//   iosignal::formatName(name, sizeof(name), "Iris Basic", "HOME");                 // "Iris Basic:HOME"
+//   iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Iris Basic"); // the board setting "name"
 //   io.signal("@$name", name);
 //   io.signal("@$ui", "t=switch4.1");
 #ifndef IOSignalUi_h
@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <string.h>
 
-namespace remocon {
+namespace iosignal {
 
 static const size_t NAME_BYTES = 64;  // the recommended largest $name
 
@@ -111,6 +111,9 @@ inline bool nameIs(const char* text, const char* name) {
   return *rest == 0 || *rest == ':';
 }
 
-}  // namespace remocon
+}  // namespace iosignal
+
+// Up to 9.23.0 these helpers were in namespace remocon; the alias keeps those sketches compiling.
+namespace remocon = iosignal;
 
 #endif

@@ -32,7 +32,7 @@ unsigned long lastShot = 0;
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32-CAM");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32-CAM");
   io.signal("@$name", name);
   io.signal("@$ui", "t=camera.1");
 }
@@ -135,7 +135,7 @@ void setup() {
   e2eKey.onChange([](const char*) {});  // read for each picture: no restart needed
   interval.range(100, 60000);
   interval.onChange([](const char*) { if (io.state == IO_READY) publishState(); });
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
   config.printServer();
 
   cameraReady = cameraSetup();

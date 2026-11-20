@@ -150,6 +150,12 @@ To develop locally before a new release reaches the Library Manager, install the
 
 ## Changes by version
 
+### Next version (not released)
+
+- **The helper namespace is now `iosignal`.** Functions and constants of `IOSignalUi.h` and `IOSignalBinding.h` are written like `iosignal::formatNameSetting()`. The `remocon::` name of 9.23.0 and earlier stays as an alias of the same namespace, so those sketches still compile (they cannot also include `RemoconUi.h` from the old Remocon library).
+- **The examples' default server is `io.iosignal.net`.** It was `io.remocon.kr`, the same broker, so nothing changes in behavior. A server saved in the board settings is still used.
+- The examples' header comments say "device example" instead of "Remocon example".
+
 ### 9.23.0
 
 - **Every Remocon example moved into this library.** The 22 examples of [remocon-arduino](https://github.com/remocons/remocon-arduino) 9.22.0 are under **File > Examples > IOSignal** with the same names. remocon-arduino stays as it is; new examples are added only here.
@@ -165,7 +171,7 @@ To develop locally before a new release reaches the Library Manager, install the
 - **Boho 1.1.0 or later is required.** The dependency is now `Boho (>=1.1.0)`. The login nonce no longer comes from `micros()`: ESP32 and ESP8266 use the chip's hardware random numbers, other boards a keyed hash of gathered timing. The server and the protocol are unchanged.
 - **Three `setLog()` lines are shorter on the UNO (AVR).** The trailing hints ("Is it the IOSignal TCP port?" and the like) are left out to save flash. Other boards print the same text as before.
 - The `esp32c3_duplicate_login` example counts a lost connection when the state changes to `IO_CLOSED`. Its output is the same.
-- **The `esp01_channel_txrx` example was removed.** ESP-01 examples are in the Remocon library: `esp01-relay-button` and `esp01-button-controller`.
+- **The `esp01_channel_txrx` example was removed.** The ESP-01 examples are `esp01-relay-button` and `esp01-button-controller` (then in the Remocon library, in this library since 9.23.0).
 - The public iosignal (npm) of the same time is 9.21.0. There is no IOSignal Arduino numbered 9.15 to 9.20.
 
 ### 9.14.2

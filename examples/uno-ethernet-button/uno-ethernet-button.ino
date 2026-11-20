@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: Arduino UNO + W5100 Ethernet shield + button
+ *  IOSignal device example: Arduino UNO + W5100 Ethernet shield + button
  *
  *  remocon.kr shows it as a light (light.1): on, off, toggle.
  *    The light is an LED on D5 and a relay on D6, switched together.
@@ -53,7 +53,7 @@ void setup() {
   Serial.println(Ethernet.localIP());
   
   io.setRxBuffer( 80 );
-  io.begin( &client, "io.remocon.kr", 55488);
+  io.begin( &client, "io.iosignal.net", 55488);
   io.onReady( &onReady );
   io.onMessage( &onMessage );
   // io.auth("ID_KEY"); // Optional: use your own device key.

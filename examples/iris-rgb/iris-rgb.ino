@@ -34,7 +34,7 @@ IOSignal io;
 IOSignalConfig config;
 void connectNetwork() {
   config.begin(Serial, "Iris RGB", WIFI_SSID, WIFI_PASS);
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
   config.printServer();
   WiFi.setTxPower(WIFI_POWER_8_5dBm); // Small ESP32-C3 boards drop sent packets at full power (antenna).
   WiFi.setSleep(false); // Power save delays incoming signals by 100-800 ms.
@@ -70,7 +70,7 @@ void makeInfo() {
   char name[12], category[16];
   snprintf(name, sizeof(name), "iris%u", deviceId);
   snprintf(category, sizeof(category), "iris G%u", groupId);
-  remocon::formatNameSetting(deviceName, sizeof(deviceName), nameSetting.value(), name, category);
+  iosignal::formatNameSetting(deviceName, sizeof(deviceName), nameSetting.value(), name, category);
 }
 void sendInfo() {
   io.signal("@$name", deviceName);

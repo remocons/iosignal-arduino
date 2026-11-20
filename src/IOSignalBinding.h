@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
-namespace remocon {
+namespace iosignal {
 
 static const size_t TARGET_MAX = 31;   // a CID (12 at most) or a #channel
 static const size_t KEY_MAX = 15;
@@ -309,6 +309,9 @@ inline size_t plan(const Action& a, const char* target, const char* state, Messa
   return 1;
 }
 
-}  // namespace remocon
+}  // namespace iosignal
+
+// Up to 9.23.0 these helpers were in namespace remocon; the alias keeps those sketches compiling.
+namespace remocon = iosignal;
 
 #endif

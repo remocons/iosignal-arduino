@@ -34,7 +34,7 @@ IOSignalSetting nameSetting(config, "name", "Name & category (name:category)", "
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Iris Basic");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Iris Basic");
   io.signal("@$name", name);
   io.signal("@$ui", "t=switch4.1");
 }
@@ -42,7 +42,7 @@ void connectNetwork() {
   config.begin(Serial, "Iris Basic", WIFI_SSID, WIFI_PASS);
   nameSetting.maxLength(64);
   nameSetting.onChange([](const char*) { if (io.state == IO_READY) sendInfo(); });
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
 #ifdef SECRET_ID_KEY
   config.setKey(SECRET_ID_KEY); // optional key (id.key) from _secrets.h; one set over USB wins
 #endif

@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: the simplest Wi-Fi client (ESP8266, ESP32)
+ *  IOSignal device example: the simplest Wi-Fi client (ESP8266, ESP32)
  *
  *  Joins the shared switch group #switch (switch3.1) and prints the
  *  shared state to serial (115200). No other hardware is needed.
@@ -36,7 +36,7 @@
 #include <IOSignalUi.h>
 #define WIFI_ID  "WIFI_SSID"
 #define WIFI_KEY "WIFI_PASS"
-#define SERVER_URL "io.remocon.kr"
+#define SERVER_URL "io.iosignal.net"
 #define SERVER_PORT 55488
 #define SWITCH_CH "#switch"
 #define SWITCH_STATE SWITCH_CH "$state"
@@ -60,7 +60,7 @@ char lastState[48] = "";  // the group's last $state, kept to toggle s1 and keep
 void sendInfo() {
   // $name "name:category" (the board setting 'name'); a group's $ui is the extended form (t=…).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "공유 스위치");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "공유 스위치");
   io.signal(SWITCH_CH "$name", name);
   io.signal(SWITCH_CH "$ui", "t=switch3.1");
 }

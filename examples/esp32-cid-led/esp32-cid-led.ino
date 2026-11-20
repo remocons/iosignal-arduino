@@ -1,5 +1,5 @@
 /*
-  ESP32: Remocon device discovery, direct CID commands and state publication.
+  ESP32: device discovery (remocon.kr), direct CID commands and state publication.
   Wiring: GPIO 4 -> 330 ohm resistor -> LED anode; LED cathode -> GND.
   Uses an external active-high LED; no assumption about onboard LEDs.
   Wi-Fi: leave WIFI_SSID as it is and set it from https://arduino.iosignal.net/wifi/ over USB,
@@ -14,7 +14,7 @@
 
 const char* WIFI_SSID = "WIFI_SSID";
 const char* WIFI_PASS = "WIFI_PASS";
-const char* IO_HOST = "io.remocon.kr";
+const char* IO_HOST = "io.iosignal.net";
 const uint16_t IO_PORT = 55488;
 const uint8_t LED_PIN = 4;
 
@@ -27,7 +27,7 @@ IOSignalSetting nameSetting(config, "name", "Name & category (name:category)", "
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32-LED");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32-LED");
   io.signal("@$name", name);
   io.signal("@$ui", "on,off,toggle");
 }

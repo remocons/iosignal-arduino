@@ -55,7 +55,7 @@ bool requestSeen = false, helloSeen = false;
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32-CAM");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP32-CAM");
   io.signal("@$name", name);
   io.signal("@$ui", "t=camera-session.1");
 }
@@ -260,7 +260,7 @@ void setup() {
   e2eKey.onChange([](const char*) { restartSessions("new e2e_key"); });  // sessions made with the old key end
   interval.range(100, 60000);
   interval.onChange([](const char*) { if (io.state == IO_READY) publishState(); });
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
   config.printServer();
 
   newNonce();

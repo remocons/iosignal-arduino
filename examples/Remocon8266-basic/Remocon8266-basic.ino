@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: Remocon8266 basic (controlled from the web app, state on the OLED)
+ *  IOSignal device example: Remocon8266 basic (controlled from the web app, state on the OLED)
  *
  *  remocon.kr shows the board as a 3-way switch (switch3.1):
  *    s1 = built-in LED (active low), s2 = OUT1 (GPIO15, D8), s3 = OUT2 (GPIO12, D6).
@@ -45,7 +45,7 @@
 #define WIFI_ID  "WIFI_SSID"
 #define WIFI_KEY "WIFI_PASS"
 
-#define SERVER_URL "io.remocon.kr"
+#define SERVER_URL "io.iosignal.net"
 #define SERVER_PORT 55488
 
 IOSignalConfig config;
@@ -73,7 +73,7 @@ bool infoPage = false;           // SW4: CID, IP and server instead of the state
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Remocon8266");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Remocon8266");
   io.signal("@$name", name);
   io.signal("@$ui", "t=switch3.1");
 }

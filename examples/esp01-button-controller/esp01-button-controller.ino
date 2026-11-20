@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: ESP-01 one-button controller
+ *  IOSignal device example: ESP-01 one-button controller
  *
  *  The button on GPIO3 (RX) controls another device by its CID: a 4-channel relay board
  *  (esp8266-relay4ch), an ESP-01 relay (esp01-relay-button), an iris board (iris-basic),
@@ -63,24 +63,24 @@ bool setupMode = false;  // serial on GPIO1/GPIO3 instead of the LED and the but
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP01 Button");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "ESP01 Button");
   io.signal("@$name", name);
   io.signal("@$ui", "b1");
 }
 
 // Whether the target is "on" for the LED: the channel b1 names, or any channel for the default and "all".
 bool targetOn() {
-  remocon::Action a;
-  if (!remocon::parseAction(b1.value(), &a)) return false;
+  iosignal::Action a;
+  if (!iosignal::parseAction(b1.value(), &a)) return false;
   const char* state = buttons.state(a.target[0] ? a.target : buttons.target());
   if (!state) return false;
   char value[8];
-  if ((a.kind == remocon::ACTION_TOGGLE || a.kind == remocon::ACTION_SET) && remocon::stateValue(state, a.key, value, sizeof(value)))
+  if ((a.kind == iosignal::ACTION_TOGGLE || a.kind == iosignal::ACTION_SET) && iosignal::stateValue(state, a.key, value, sizeof(value)))
     return strcmp(value, "1") == 0;
-  char keys[remocon::CHANNELS_MAX][remocon::KEY_MAX + 1];
-  size_t n = remocon::channelKeys(state, keys, remocon::CHANNELS_MAX);
+  char keys[iosignal::CHANNELS_MAX][iosignal::KEY_MAX + 1];
+  size_t n = iosignal::channelKeys(state, keys, iosignal::CHANNELS_MAX);
   for (size_t i = 0; i < n; i++)
-    if (remocon::stateValue(state, keys[i], value, sizeof(value)) && strcmp(value, "1") == 0) return true;
+    if (iosignal::stateValue(state, keys[i], value, sizeof(value)) && strcmp(value, "1") == 0) return true;
   return false;
 }
 
@@ -123,7 +123,7 @@ void setup() {
   config.begin("ESP01 Button", WIFI_SSID, WIFI_PASS);
   nameSetting.maxLength(64);
   nameSetting.onChange([](const char*) { if (io.state == IO_READY) sendInfo(); });
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
 
   buttons.onChange(publishState);
   buttons.begin();  // GPIO3 becomes an input with a pull-up

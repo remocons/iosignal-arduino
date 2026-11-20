@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: Remocon8266 controller for a 4-channel relay board
+ *  IOSignal device example: Remocon8266 controller for a 4-channel relay board
  *
  *  Controls a board running esp8266-relay4ch by its CID (DEFAULT_TARGET, a fixed
  *  CID from that board's device key). The target can change without new firmware:
@@ -82,7 +82,7 @@ IOSignalSetting nameSetting(config, "name", "Name & category (name:category)", "
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Relay Control");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Relay Control");
   io.signal("@$name", name);
   io.signal("@$ui", "p=1;b=r1,r2,r3,r4,all");
 }
@@ -108,7 +108,7 @@ void relayStates(char states[5]) {
   if (!state) return;
   for (uint8_t i = 0; i < 4; i++) {
     char key[3] = { 'r', char('1' + i), 0 }, v[2];
-    states[i] = remocon::stateValue(state, key, v, sizeof(v)) && v[0] == '1' ? '1' : '0';
+    states[i] = iosignal::stateValue(state, key, v, sizeof(v)) && v[0] == '1' ? '1' : '0';
   }
 }
 
@@ -226,7 +226,7 @@ void setup() {
   config.begin(Serial, "Relay Control", WIFI_SSID, WIFI_PASS);
   nameSetting.maxLength(64);
   nameSetting.onChange([](const char*) { if (io.state == IO_READY) sendInfo(); });
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
 #ifdef SECRET_ID_KEY
   config.setKey(SECRET_ID_KEY);
 #endif

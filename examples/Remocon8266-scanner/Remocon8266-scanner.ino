@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: Remocon8266 scanner (finds the devices around it, list on the OLED)
+ *  IOSignal device example: Remocon8266 scanner (finds the devices around it, list on the OLED)
  *
  *  The board sends #search, the way the web app does, and lists every device that answers
  *  with #notify (the devices on the same router, so the same public IP). For each it reads the
@@ -41,7 +41,7 @@
 #define WIFI_ID  "WIFI_SSID"
 #define WIFI_KEY "WIFI_PASS"
 
-#define SERVER_URL "io.remocon.kr"
+#define SERVER_URL "io.iosignal.net"
 #define SERVER_PORT 55488
 
 #define MAX_DEVICES 16
@@ -70,7 +70,7 @@ unsigned long searchedAt = 0;
 
 void sendInfo() {
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "Remocon8266 Scanner");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "Remocon8266 Scanner");
   io.signal("@$name", name);
   io.signal("@$ui", "scan");  // the card's button: search again
 }

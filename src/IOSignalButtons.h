@@ -73,7 +73,7 @@ class IOSignalButtons {
     if (!w) return false;
     if (type != IOSignal::TEXT || !payload || !size || !memchr(payload, 0, size)) return true;
     const char* text = (const char*)payload;
-    if (!remocon::isGroup(w->target) && strcmp(text, "close") == 0) w->known = false;
+    if (!iosignal::isGroup(w->target) && strcmp(text, "close") == 0) w->known = false;
     else {
       snprintf(w->state, sizeof(w->state), "%s", text);
       w->known = true;
@@ -95,8 +95,8 @@ class IOSignalButtons {
       IOSignalSetting* s = _buttons[i].setting;
       if (!s || strlen(s->name()) != n || strncmp(s->name(), text, n) != 0) continue;
       if (!eq) { press(i); return true; }
-      remocon::Action a;
-      if (remocon::parseAction(eq + 1, &a)) s->setFromRemote(eq + 1);
+      iosignal::Action a;
+      if (iosignal::parseAction(eq + 1, &a)) s->setFromRemote(eq + 1);
       else log(s->name(), ": bad setting");
       return true;
     }
@@ -113,12 +113,12 @@ class IOSignalButtons {
   // Runs button i. False when nothing was sent: a bad setting, or the target's state is not known yet.
   bool press(uint8_t i) {
     if (i >= _count) return false;
-    remocon::Action a;
+    iosignal::Action a;
     const char* text = _buttons[i].setting ? _buttons[i].setting->value() : "";
-    if (!remocon::parseAction(text, &a)) { log(_buttons[i].setting->name(), ": bad setting"); return false; }
-    if (a.kind == remocon::ACTION_NONE) {
+    if (!iosignal::parseAction(text, &a)) { log(_buttons[i].setting->name(), ": bad setting"); return false; }
+    if (a.kind == iosignal::ACTION_NONE) {
       Watch* w = watchOf(_target.value());
-      if (!remocon::defaultAction(i, _count, w && w->known ? w->state : nullptr, &a)) {
+      if (!iosignal::defaultAction(i, _count, w && w->known ? w->state : nullptr, &a)) {
         log("BUTTON ", i + 1, ": target state not known yet");
         return false;
       }
@@ -129,17 +129,17 @@ class IOSignalButtons {
   // Runs an action given as text (same form as a setting; a target it names must be watched already,
   // or its toggles wait for a state): for a card's own buttons such as "r1" or "all".
   bool run(const char* text) {
-    remocon::Action a;
-    if (!remocon::parseAction(text, &a) || a.kind == remocon::ACTION_NONE) return false;
+    iosignal::Action a;
+    if (!iosignal::parseAction(text, &a) || a.kind == iosignal::ACTION_NONE) return false;
     return execute(a, "RUN ", 0);
   }
 
  private:
-  bool execute(const remocon::Action& a, const char* label, int number) {
+  bool execute(const iosignal::Action& a, const char* label, int number) {
     const char* target = a.target[0] ? a.target : _target.value();
     Watch* w = watchOf(target);
-    remocon::Message* out = _out;
-    size_t n = remocon::plan(a, target, w && w->known ? w->state : nullptr, out, remocon::CHANNELS_MAX);
+    iosignal::Message* out = _out;
+    size_t n = iosignal::plan(a, target, w && w->known ? w->state : nullptr, out, iosignal::CHANNELS_MAX);
     if (!n) { log(label, number, ": target state not known yet"); return false; }
     for (size_t m = 0; m < n; m++) {
       size_t len = strlen(out[m].tag);
@@ -167,14 +167,14 @@ class IOSignalButtons {
   }
   // Whether button i's setting is valid (an empty one is).
   bool valid(uint8_t i) const {
-    remocon::Action a;
-    return i < _count && (!_buttons[i].setting || remocon::parseAction(_buttons[i].setting->value(), &a));
+    iosignal::Action a;
+    return i < _count && (!_buttons[i].setting || iosignal::parseAction(_buttons[i].setting->value(), &a));
   }
 
  private:
   struct Watch {
-    char target[remocon::TARGET_MAX + 1];
-    char state[remocon::STATE_MAX + 1];
+    char target[iosignal::TARGET_MAX + 1];
+    char state[iosignal::STATE_MAX + 1];
     bool known;
   };
 
@@ -202,9 +202,9 @@ class IOSignalButtons {
     };
     add(_target.value());
     for (uint8_t i = 0; i < _count; i++) {
-      remocon::Action a;
+      iosignal::Action a;
       if (!_buttons[i].setting) continue;
-      if (remocon::parseAction(_buttons[i].setting->value(), &a)) add(a.target);
+      if (iosignal::parseAction(_buttons[i].setting->value(), &a)) add(a.target);
       else log(_buttons[i].setting->name(), ": bad setting");
     }
     // Stop watching targets no longer named, start the new ones.
@@ -221,8 +221,8 @@ class IOSignalButtons {
   // A device: <cid>@$state. A group: its shared #ch$state.
   void subscribe(const char* target, bool on) {
     if (_io.state != IO_READY) return;
-    char tag[remocon::TARGET_MAX + 8];
-    snprintf(tag, sizeof(tag), remocon::isGroup(target) ? "%s$state" : "%s@$state", target);
+    char tag[iosignal::TARGET_MAX + 8];
+    snprintf(tag, sizeof(tag), iosignal::isGroup(target) ? "%s$state" : "%s@$state", target);
     if (on) _io.subscribe(tag);
     else _io.unsubscribe(tag);
   }
@@ -235,7 +235,7 @@ class IOSignalButtons {
   Watch* watchOfTag(const char* tag) {
     for (uint8_t i = 0; i < _watching; i++) {
       size_t n = strlen(_watch[i].target);
-      const char* rest = remocon::isGroup(_watch[i].target) ? "$state" : "@$state";
+      const char* rest = iosignal::isGroup(_watch[i].target) ? "$state" : "@$state";
       if (strncmp(tag, _watch[i].target, n) == 0 && strcmp(tag + n, rest) == 0) return &_watch[i];
     }
     return nullptr;
@@ -244,7 +244,7 @@ class IOSignalButtons {
   template <typename... Parts>
   void log(Parts... parts) {
     if (!_log) return;
-    char line[remocon::STATE_MAX + 48] = "";
+    char line[iosignal::STATE_MAX + 48] = "";
     append(line, sizeof(line), parts...);
     _log(line);
   }
@@ -273,7 +273,7 @@ class IOSignalButtons {
   void (*_log)(const char*) = nullptr;
   // Scratch space kept off the stack (the ESP8266 loop stack is 4 KB).
   Watch _next[MAX_BUTTONS + 1];
-  remocon::Message _out[remocon::CHANNELS_MAX];
+  iosignal::Message _out[iosignal::CHANNELS_MAX];
   // One controller per sketch: the settings' change callbacks have no context.
   static inline IOSignalButtons* _self = nullptr;
 };

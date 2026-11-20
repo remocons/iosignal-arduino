@@ -20,7 +20,7 @@ IOSignalConfig config;
 IOSignalSetting nameSetting(config, "name", "Name & category (empty: from DIP)", "");
 void connectNetwork() {
   config.begin(Serial, "Iris Group", WIFI_SSID, WIFI_PASS);
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
   config.printServer();
   WiFi.setTxPower(WIFI_POWER_8_5dBm); // Small ESP32-C3 boards drop sent packets at full power (antenna).
   io.setRxBuffer(256);
@@ -50,7 +50,7 @@ void makeInfo() {
   char name[24], category[16];
   snprintf(name, sizeof(name), "Iris Lights %u", groupId);
   snprintf(category, sizeof(category), "iris G%u", groupId);
-  remocon::formatNameSetting(groupName, sizeof(groupName), nameSetting.value(), name, category);
+  iosignal::formatNameSetting(groupName, sizeof(groupName), nameSetting.value(), name, category);
 }
 void sendInfo() {
   io.signal(nameTag, groupName);

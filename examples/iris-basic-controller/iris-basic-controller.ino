@@ -32,7 +32,7 @@ IOSignal io;
 IOSignalConfig config;
 void connectNetwork() {
   config.begin(Serial, "Iris Control", WIFI_SSID, WIFI_PASS);
-  config.setServer("io.remocon.kr", 55488);
+  config.setServer("io.iosignal.net", 55488);
   config.printServer();
   WiFi.setTxPower(WIFI_POWER_8_5dBm); // Small ESP32-C3 boards drop sent packets at full power (antenna).
   WiFi.setSleep(false); // Power save delays incoming signals by 100-800 ms.
@@ -102,7 +102,7 @@ void onMessage(char* tag, uint8_t type, uint8_t* payload, size_t size) {
   } else if (cidOf(tag, "@$name", cid)) {
     io.unsubscribe(tag); // The name is read once. Do not keep receiving it.
     // "Iris Basic" or "Iris Basic:<category>": the part before ':' must be the whole name.
-    if (target[0] || !remocon::nameIs(text, TARGET_NAME)) return;
+    if (target[0] || !iosignal::nameIs(text, TARGET_NAME)) return;
     strcpy(target, cid);
     logLine("TARGET ", target);
     snprintf(sub, sizeof(sub), "%s@$state", target);

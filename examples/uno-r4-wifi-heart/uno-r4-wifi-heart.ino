@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: Arduino UNO R4 WiFi heart
+ *  IOSignal device example: Arduino UNO R4 WiFi heart
  *
  *  remocon.kr shows it as a light (light.1): on, off, toggle.
  *    On shows a heart on the LED matrix and lights the built-in LED.
@@ -78,7 +78,7 @@ void setup() {
   delay(500);
 
   io.setRxBuffer( 200 );
-  io.begin( &client, "io.remocon.kr", 55488 );
+  io.begin( &client, "io.iosignal.net", 55488 );
   io.onReady( &onReady );
   io.onMessage( &onMessage );
   // io.auth("ID_KEY"); // Optional: use your own device key.

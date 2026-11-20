@@ -1,5 +1,5 @@
 /*
- *  IOSignal Remocon example: ESP8266 D1 mini
+ *  IOSignal device example: ESP8266 D1 mini
  *
  *  remocon.kr shows it as a light (light.1): on, off, toggle.
  *    The built-in LED (GPIO2, active low) is the light.
@@ -35,7 +35,7 @@ IOSignalSetting nameSetting(config, "name", "Name & category (name:category)", "
 void sendInfo() {
   // $name "name:category" (the board setting 'name'), $ui the type or the buttons (device rules v2).
   char name[64];
-  remocon::formatNameSetting(name, sizeof(name), nameSetting.value(), "D1-mini");
+  iosignal::formatNameSetting(name, sizeof(name), nameSetting.value(), "D1-mini");
   io.signal("@$name", name);
   io.signal("@$ui", "t=light.1");
 }
@@ -79,7 +79,7 @@ void setup() {
   config.begin( Serial, "D1-mini", "WIFI_SSID", "WIFI_PASS" );
   nameSetting.maxLength(64);
   nameSetting.onChange([](const char*) { if (io.state == IO_READY) sendInfo(); });
-  config.setServer( "io.remocon.kr", 55488 );
+  config.setServer( "io.iosignal.net", 55488 );
   config.printServer();
   io.setRxBuffer( 200 );
   io.setLog( [](const char* line) { Serial.println(line); } );
