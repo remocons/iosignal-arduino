@@ -186,9 +186,9 @@ To develop locally before a new release reaches the Library Manager, install the
 
 ### 9.14.1
 
-- **Board settings can choose anonymous login (ESP32, ESP8266).** "익명으로 접속" (connect anonymously) on the [board settings page](https://test.iosignal.net/wifi/) makes the board connect without a key even when the sketch sets one (`setKey`). The board stores `-` as the key; clearing the stored key brings the sketch key back. Older firmware refuses this value.
+- **Board settings can choose anonymous login (ESP32, ESP8266).** "익명으로 접속" (connect anonymously) on the [board settings page](https://arduino.iosignal.net/wifi/) (then test.iosignal.net/wifi/) makes the board connect without a key even when the sketch sets one (`setKey`). The board stores `-` as the key; clearing the stored key brings the sketch key back. Older firmware refuses this value.
 - The `esp32c3_duplicate_login` example now defaults to `io.iosignal.net`. It needs an IOSignal server you run yourself and a device key registered on it; `ID_KEY` ("did.key") in the sketch is a placeholder.
-- The Remocon example pages moved to [arduino.remocon.kr](https://arduino.remocon.kr/); [test.iosignal.net](https://test.iosignal.net/) now shows the IOSignal examples.
+- The Remocon example pages moved to arduino.remocon.kr; test.iosignal.net showed the IOSignal examples. (Both were merged into [arduino.iosignal.net](https://arduino.iosignal.net/) on 2026-11-20.)
 
 ### 9.14.0
 
@@ -210,7 +210,7 @@ To develop locally before a new release reaches the Library Manager, install the
 
 - **The version number now matches the public iosignal 9.12.0 package.** The library code (`src`) is the same as 9.6.0.
 - Overlapping examples were removed. The `_channel_sender` and `_channel_receiver` examples for `esp8266`, `uno_ethernet` and `uno_r4_wifi` are replaced by the `_channel_txrx` example of the same board, `esp32_channel_txrx` by `esp8266_channel_txrx` (which now builds for ESP8266 and ESP32), and `uno_ethernet_duplicate_login` by `esp32c3_duplicate_login`.
-- Parts, wiring, steps and a browser panel for each example are on [test.iosignal.net](https://test.iosignal.net/) (Korean).
+- Parts, wiring, steps and a browser panel for each example were then on test.iosignal.net (now [arduino.iosignal.net](https://arduino.iosignal.net/), Korean).
 
 ### 9.6.0
 
