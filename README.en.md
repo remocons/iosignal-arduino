@@ -109,7 +109,7 @@ Parts, wiring, steps, browser firmware install and board settings for each examp
 | Group channels | `esp32-group-led`, `wifi-simple` | |
 | UNO | `uno-ethernet-button`, `uno-ethernet-ir`, `uno-r4-wifi-heart` | Ethernet, (IR: IRremote) |
 
-Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and show each as a card. The rules for announcing the name (`$name`), screen (`$ui`) and state (`$state`) are in [Building a device (remocon.kr compatible)](https://docs.iosignal.net/en/docs/arduino/remocon-device). The examples share these helper headers:
+Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and show each as a card. The rules for announcing the name (`$name`), screen (`$ui`) and state (`$state`) are in [Building a device (app.iosignal.net compatible)](https://docs.iosignal.net/en/docs/arduino/iosignal-device). The examples share these helper headers:
 
 - `IOSignalUi.h`: builds and reads `$name` (`name:category`) and `$ui` (`formatName()`, `formatNameSetting()`, `nameOf()`, `categoryOf()`, `isExtendedUi()`).
 - `IOSignalBinding.h`, `IOSignalButtons.h`: what each controller button does comes from board settings (`b1` to `b7`); the controller subscribes to the target's state and toggles it (ESP32, ESP8266).
