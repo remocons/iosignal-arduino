@@ -2,7 +2,7 @@
 
 [한국어](README.md) | **English**
 
-The Arduino IOSignal library provides a client that connects Arduino boards to an IOSignal server, with examples for each board.
+The Arduino IOSignal library provides a client that connects Arduino boards to an IOSignal server, with examples for each board. Besides the channel examples, it holds the device, controller and camera examples that web apps find and control (formerly in [remocon-arduino](https://github.com/remocons/remocon-arduino)).
 
 <p align="center">
   <img src="docs/assets/iosignal-ecosystem.png" alt="Server, CLI, Node.js, Arduino and remote control web app connected through IOSignal" width="720" />
@@ -20,7 +20,7 @@ From **9.0.0**, this library uses the same version number as the public [iosigna
 
 1. In the Arduino IDE Library Manager, search for `IOSignal` and install it together with its dependencies **Boho** (1.1.0 or later), **Crypto** and **Bounce2**.
 2. Until a new version reaches the Library Manager, download the ZIP from the [public repository](https://github.com/remocons/iosignal-arduino) and add it with **Sketch > Include Library > Add .ZIP Library**.
-3. Open an example for your board from **File > Examples > IOSignal**.
+3. Open an example for your board from **File > Examples > IOSignal**. Some examples need more libraries (see [Examples](#examples)).
 
 Supported boards: UNO with a W5100 Ethernet shield, UNO R4 WiFi, ESP8266 and ESP32 (including ESP32-C3). Each example targets specific boards; check the folder name.
 
@@ -64,7 +64,7 @@ void loop() {
 
 ## Board settings (ESP32, ESP8266, 9.13.0)
 
-With `IOSignalConfig.h`, board settings change from a browser over USB without rebuilding the sketch. The page is [test.iosignal.net/wifi](https://test.iosignal.net/wifi/) (desktop Chrome or Edge, Korean). It uses the standard [Improv Wi-Fi Serial](https://www.improv-wifi.com/serial/) protocol plus IOSignal commands.
+With `IOSignalConfig.h`, board settings change from a browser over USB without rebuilding the sketch. The page is [arduino.iosignal.net/wifi](https://arduino.iosignal.net/wifi/) (desktop Chrome or Edge, Korean). It uses the standard [Improv Wi-Fi Serial](https://www.improv-wifi.com/serial/) protocol plus IOSignal commands.
 
 ```cpp
 #include <IOSignal.h>
@@ -94,6 +94,26 @@ void loop() {
 - Values are kept in Preferences (ESP32) or LittleFS (ESP8266, a flash layout with a file system). ESP32 and ESP8266 only; on other boards the header is empty.
 - A board that uses its TX pin for something else (ESP-01) starts with `begin(name, …)` without serial and calls `attachSerial()` only in a setup mode. A sketch that reads its own serial commands gets them through `onOtherInput()`.
 
+## Examples
+
+Parts, wiring, steps, browser firmware install and board settings for each example are on [arduino.iosignal.net](https://arduino.iosignal.net/) (Korean). Each example folder's `README.md` has the same content.
+
+| Group | Examples | More libraries |
+| --- | --- | --- |
+| Channel send and receive | `esp_channel_txrx`, `uno_ethernet_channel_txrx`, `uno_r4_wifi_channel_txrx` | (UNO Ethernet: Ethernet) |
+| Server features | `esp32c3_duplicate_login` | |
+| iris board (ESP32-C3) | `iris-basic`, `iris-rgb`, `iris-group`, `iris-basic-controller`, `iris-button-controller` | FastLED |
+| Relays and button controllers | `esp8266-relay4ch`, `esp01-relay-button`, `button-controller`, `esp01-button-controller`, `Remocon8266-button-controller` | (Remocon8266: U8g2) |
+| Single devices | `esp32-cid-led`, `d1-mini-led-button`, `Remocon8266-basic`, `Remocon8266-tv`, `Remocon8266-scanner` | (Remocon8266: U8g2) |
+| Cameras (ESP32-CAM) | `esp32cam`, `esp32cam-session` | |
+| Group channels | `esp32-group-led`, `wifi-simple` | |
+| UNO | `uno-ethernet-button`, `uno-ethernet-ir`, `uno-r4-wifi-heart` | Ethernet, (IR: IRremote) |
+
+Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and show each as a card. The rules for announcing the name (`$name`), screen (`$ui`) and state (`$state`) are in [Building a Remocon device](https://iosignal.net/en/docs/arduino/remocon-device). The examples share these helper headers:
+
+- `IOSignalUi.h`: builds and reads `$name` (`name:category`) and `$ui` (`formatName()`, `formatNameSetting()`, `nameOf()`, `categoryOf()`, `isExtendedUi()`).
+- `IOSignalBinding.h`, `IOSignalButtons.h`: what each controller button does comes from board settings (`b1` to `b7`); the controller subscribes to the target's state and toggles it (ESP32, ESP8266).
+
 ## RX buffer and large messages
 
 - `setRxBuffer(size)` sets the largest frame the device can receive. Without it, `begin()` allocates **80 bytes**.
@@ -118,9 +138,9 @@ void loop() {
 | [iosignal-arduino](https://github.com/remocons/iosignal-arduino) | This repository. Client library that connects Arduino devices to an IOSignal server |
 | [boho](https://github.com/remocons/boho) · [npm](https://www.npmjs.com/package/boho) | Shared-key authentication and encryption library for JavaScript |
 | [boho-arduino](https://github.com/remocons/boho-arduino) | Arduino implementation of Boho, the authentication and encryption dependency of this library |
-| [remocon-arduino](https://github.com/remocons/remocon-arduino) | Board-specific remote control examples using IOSignal |
+| [remocon-arduino](https://github.com/remocons/remocon-arduino) | The former Remocon example library (9.22.0). Its examples moved to this repository |
 
-To try it in a browser, use the [IOSignal communication lab](https://test.iosignal.net/). For device discovery and control examples, use the [Remocon web app](https://remocon.kr/). The [board workbench guide](https://iosignal.net/en/docs/examples/workbench/start) shows the connection steps.
+For example guides and firmware install, use [arduino.iosignal.net](https://arduino.iosignal.net/). For device discovery and control, use the [Remocon web app](https://remocon.kr/). The [board workbench guide](https://iosignal.net/en/docs/examples/workbench/start) shows the connection steps.
 
 ## Boho dependency
 
@@ -129,6 +149,13 @@ IOSignal uses the external Arduino library **Boho 1.1.0 or later**. Boho is not 
 To develop locally before a new release reaches the Library Manager, install the updated `boho-arduino` library from a local folder or ZIP. The `depends` field follows the [Arduino library specification](https://docs.arduino.cc/arduino-cli/library-specification/).
 
 ## Changes by version
+
+### Next version (unreleased)
+
+- **Every Remocon example moved into this library.** The 22 examples of [remocon-arduino](https://github.com/remocons/remocon-arduino) 9.22.0 are under **File > Examples > IOSignal** with the same names. remocon-arduino stays as it is; new examples are added only here.
+- **The helper headers were renamed.** `RemoconUi.h` → `IOSignalUi.h`, `RemoconBinding.h` → `IOSignalBinding.h`, `RemoconButtons.h` → `IOSignalButtons.h` (class `RemoconButtons` → `IOSignalButtons`). Functions and behavior are the same; a sketch that used the Remocon headers changes only its `#include` lines and the class name.
+- Dependencies are unchanged (Boho, Crypto, Bounce2). FastLED, U8g2, IRremote and Ethernet are needed only by the examples that use them; install them separately.
+- The example site is now [arduino.iosignal.net](https://arduino.iosignal.net/) (formerly test.iosignal.net and arduino.remocon.kr). The Wi-Fi hint in `IOSignalConfig.h` points to `https://arduino.iosignal.net/wifi/`.
 
 ### 9.21.0
 

@@ -2,7 +2,7 @@
 
 **한국어** | [English](README.en.md)
 
-Arduino IOSignal 라이브러리는 아두이노를 IOSignal 서버에 연결하는 클라이언트와 보드별 예제를 제공합니다.
+Arduino IOSignal 라이브러리는 아두이노를 IOSignal 서버에 연결하는 클라이언트와 보드별 예제를 제공합니다. 채널 통신 예제와 함께, 웹앱이 찾고 제어하는 장치·제어기·카메라 예제(예전 [remocon-arduino](https://github.com/remocons/remocon-arduino)의 예제)도 이 라이브러리에 있습니다.
 
 <p align="center">
   <img src="docs/assets/iosignal-ecosystem.png" alt="IOSignal로 연결되는 서버, CLI, Node.js, Arduino와 원격 제어 웹앱" width="720" />
@@ -20,7 +20,7 @@ IOSignal은 웹브라우저, Node.js, Arduino 간의 실시간 통신을 지원�
 
 1. Arduino IDE 라이브러리 매니저에서 `IOSignal`을 검색해 설치합니다. 의존 라이브러리 **Boho**(1.1.0 이상), **Crypto**, **Bounce2**도 함께 설치합니다.
 2. 라이브러리 매니저에 새 버전이 반영되기 전에는 [공개 저장소](https://github.com/remocons/iosignal-arduino)의 ZIP을 받아 **Sketch > Include Library > Add .ZIP Library**로 추가합니다.
-3. **File > Examples > IOSignal**에서 보드에 맞는 예제를 엽니다.
+3. **File > Examples > IOSignal**에서 보드에 맞는 예제를 엽니다. 일부 예제는 라이브러리를 더 설치해야 합니다(아래 [예제](#예제)).
 
 지원 보드: UNO + W5100 Ethernet 실드, UNO R4 WiFi, ESP8266, ESP32(ESP32-C3 포함). 예제마다 대상 보드가 다르므로 폴더 이름을 확인하세요.
 
@@ -64,7 +64,7 @@ void loop() {
 
 ## 보드 설정 (ESP32·ESP8266, 9.13.0)
 
-`IOSignalConfig.h`를 쓰면 스케치를 다시 빌드하지 않고 USB로 연결한 브라우저에서 보드 설정을 바꿉니다. 페이지는 [test.iosignal.net/wifi](https://test.iosignal.net/wifi/)(데스크톱 Chrome·Edge)이고, 표준 [Improv Wi-Fi Serial](https://www.improv-wifi.com/serial/)에 IOSignal 전용 명령을 더했습니다.
+`IOSignalConfig.h`를 쓰면 스케치를 다시 빌드하지 않고 USB로 연결한 브라우저에서 보드 설정을 바꿉니다. 페이지는 [arduino.iosignal.net/wifi](https://arduino.iosignal.net/wifi/)(데스크톱 Chrome·Edge)이고, 표준 [Improv Wi-Fi Serial](https://www.improv-wifi.com/serial/)에 IOSignal 전용 명령을 더했습니다.
 
 ```cpp
 #include <IOSignal.h>
@@ -94,6 +94,26 @@ void loop() {
 - 저장 위치는 ESP32 Preferences, ESP8266 LittleFS(파일 시스템이 있는 플래시 구성 필요)입니다. ESP32·ESP8266 전용이며 다른 보드에서는 이 헤더가 비어 있습니다.
 - TX 핀을 다른 용도로 쓰는 보드(ESP-01)는 `begin(name, …)`로 시리얼 없이 시작하고 `attachSerial()`로 설정 모드에서만 켭니다. 스케치가 직접 시리얼 명령을 읽으면 `onOtherInput()`으로 받습니다.
 
+## 예제
+
+예제마다 준비물, 배선, 사용 순서, 브라우저 펌웨어 설치와 보드 설정은 [arduino.iosignal.net](https://arduino.iosignal.net/)에 있습니다. 예제 폴더의 `README.md`에도 같은 내용이 있습니다.
+
+| 묶음 | 예제 | 더 설치할 라이브러리 |
+| --- | --- | --- |
+| 채널 송수신 | `esp_channel_txrx`, `uno_ethernet_channel_txrx`, `uno_r4_wifi_channel_txrx` | (UNO 이더넷: Ethernet) |
+| 서버 기능 | `esp32c3_duplicate_login` | |
+| iris 보드 (ESP32-C3) | `iris-basic`, `iris-rgb`, `iris-group`, `iris-basic-controller`, `iris-button-controller` | FastLED |
+| 릴레이와 버튼 제어기 | `esp8266-relay4ch`, `esp01-relay-button`, `button-controller`, `esp01-button-controller`, `Remocon8266-button-controller` | (Remocon8266: U8g2) |
+| 장치 하나 | `esp32-cid-led`, `d1-mini-led-button`, `Remocon8266-basic`, `Remocon8266-tv`, `Remocon8266-scanner` | (Remocon8266: U8g2) |
+| 카메라 (ESP32-CAM) | `esp32cam`, `esp32cam-session` | |
+| 그룹 채널 | `esp32-group-led`, `wifi-simple` | |
+| UNO | `uno-ethernet-button`, `uno-ethernet-ir`, `uno-r4-wifi-heart` | Ethernet, (IR: IRremote) |
+
+장치 예제는 [remocon.kr](https://remocon.kr/) 같은 웹앱이 찾아 카드로 보여 주고 제어합니다. 이름(`$name`), 화면(`$ui`), 상태(`$state`)를 알리는 규칙은 [Remocon 장치 만들기](https://iosignal.net/docs/arduino/remocon-device)에 있습니다. 예제들이 함께 쓰는 도우미 헤더는 다음과 같습니다.
+
+- `IOSignalUi.h`: `$name`(`이름:분류`)과 `$ui` 만들기·읽기(`formatName()`, `formatNameSetting()`, `nameOf()`, `categoryOf()`, `isExtendedUi()`).
+- `IOSignalBinding.h`, `IOSignalButtons.h`: 제어기 버튼마다 할 일을 보드 설정(`b1`~`b7`)으로 정하고, 대상 장치의 상태를 구독해 토글합니다(ESP32·ESP8266).
+
 ## RX 버퍼와 큰 메시지
 
 - `setRxBuffer(size)`는 한 번에 받을 수 있는 최대 프레임 크기를 정합니다. 호출하지 않으면 `begin()`이 **80바이트**를 할당합니다.
@@ -118,9 +138,9 @@ void loop() {
 | [iosignal-arduino](https://github.com/remocons/iosignal-arduino) | 현재 저장소. Arduino 장치를 IOSignal 서버에 연결하는 클라이언트 라이브러리 |
 | [boho](https://github.com/remocons/boho) · [npm](https://www.npmjs.com/package/boho) | JavaScript 환경의 공유 키 인증·암호화 라이브러리 |
 | [boho-arduino](https://github.com/remocons/boho-arduino) | Arduino용 Boho 구현. 이 라이브러리의 인증·암호화 의존성 |
-| [remocon-arduino](https://github.com/remocons/remocon-arduino) | IOSignal을 이용한 보드별 원격 제어 예제 모음 |
+| [remocon-arduino](https://github.com/remocons/remocon-arduino) | 예전 Remocon 예제 라이브러리(9.22.0). 예제는 이 저장소로 옮겨 왔습니다 |
 
-브라우저에서 직접 실습하려면 [IOSignal 통신 실습실](https://test.iosignal.net/)을, 장치 검색·제어 예제를 사용하려면 [Remocon 웹앱](https://remocon.kr/)을 이용하세요. [보드별 실습 안내](https://iosignal.net/docs/examples/workbench/start)에서 연결 순서를 확인할 수 있습니다.
+예제 안내와 펌웨어 설치는 [arduino.iosignal.net](https://arduino.iosignal.net/)을, 장치 검색·제어는 [Remocon 웹앱](https://remocon.kr/)을 이용하세요. [보드별 실습 안내](https://iosignal.net/docs/examples/workbench/start)에서 연결 순서를 확인할 수 있습니다.
 
 ## Boho 의존성
 
@@ -129,6 +149,13 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.1.0 이상**을 사용합
 새 릴리스가 라이브러리 매니저에 등록되기 전에 로컬에서 개발하려면, 업데이트된 `boho-arduino` 라이브러리를 로컬 폴더 또는 ZIP으로 설치하세요. `depends` 항목은 [Arduino 라이브러리 규격](https://docs.arduino.cc/arduino-cli/library-specification/)을 따릅니다.
 
 ## 버전별 변경 사항
+
+### 다음 버전 (배포 전)
+
+- **Remocon 예제를 모두 이 라이브러리로 옮겼습니다.** [remocon-arduino](https://github.com/remocons/remocon-arduino) 9.22.0에 있던 예제 22개가 **File > Examples > IOSignal**에 들어 있습니다. 예제 이름은 그대로입니다. remocon-arduino는 그대로 남지만 새 예제는 이 저장소에만 더합니다.
+- **도우미 헤더 이름이 바뀌었습니다.** `RemoconUi.h` → `IOSignalUi.h`, `RemoconBinding.h` → `IOSignalBinding.h`, `RemoconButtons.h` → `IOSignalButtons.h`(클래스 `RemoconButtons` → `IOSignalButtons`). 함수와 동작은 같습니다. Remocon 라이브러리의 헤더를 쓰던 스케치는 `#include`와 클래스 이름만 바꾸면 됩니다.
+- 의존성은 그대로(Boho, Crypto, Bounce2)입니다. FastLED, U8g2, IRremote, Ethernet은 그 라이브러리를 쓰는 예제에만 필요하므로 따로 설치합니다.
+- 예제 안내 사이트를 [arduino.iosignal.net](https://arduino.iosignal.net/)으로 합쳤습니다(예전 test.iosignal.net과 arduino.remocon.kr). `IOSignalConfig.h`의 Wi-Fi 안내 문구도 `https://arduino.iosignal.net/wifi/`를 가리킵니다.
 
 ### 9.21.0
 
