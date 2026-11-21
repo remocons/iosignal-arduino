@@ -20,6 +20,8 @@
     "examples/Remocon8266-scanner/README.md",
     "examples/Remocon8266-scanner/Remocon8266-scanner.ino",
     "examples/Remocon8266-scanner/Schematic_Remocon8266_2024-01-20.pdf",
+    "examples/cardputer-remocon/README.md",
+    "examples/cardputer-remocon/cardputer-remocon.ino",
     "examples/Remocon8266-tv/README.md",
     "examples/Remocon8266-tv/Remocon8266-tv.ino",
     "examples/Remocon8266-tv/Schematic_Remocon8266_2024-01-20.pdf",
