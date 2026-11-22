@@ -154,7 +154,7 @@ To develop locally before a new release reaches the Library Manager, install the
 ### 9.23.1
 
 - **The helper namespace is now `iosignal`.** Functions and constants of `IOSignalUi.h` and `IOSignalBinding.h` are written like `iosignal::formatNameSetting()`. The `remocon::` name of 9.23.0 and earlier stays as an alias of the same namespace, so those sketches still compile (they cannot also include `RemoconUi.h` from the old Remocon library).
-- **The examples' default server is `io.iosignal.net`.** It was `io.remocon.kr`, the same broker, so nothing changes in behavior. A server saved in the board settings is still used.
+- **The examples' default server is `io.iosignal.net`.** A server saved in the board settings is still used.
 - The examples' header comments say "device example" instead of "Remocon example".
 - The device guide is now [Build a device (app.iosignal.net compatible)](https://docs.iosignal.net/docs/arduino/iosignal-device) and the official type pages are at [docs.iosignal.net/docs/devices/types](https://docs.iosignal.net/docs/devices/types).
 - The public iosignal (npm) of the same time is 9.23.0. The messaging API and protocol are the same as 9.23.0.

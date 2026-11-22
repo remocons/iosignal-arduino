@@ -154,7 +154,7 @@ IOSignal은 외부 Arduino 라이브러리인 **Boho 1.1.0 이상**을 사용합
 ### 9.23.1
 
 - **도우미 이름공간이 `iosignal`이 되었습니다.** `IOSignalUi.h`, `IOSignalBinding.h`의 함수와 상수는 `iosignal::formatNameSetting()`처럼 씁니다. 9.23.0까지의 `remocon::`은 같은 이름공간의 별칭으로 남겨 두어 그대로 컴파일됩니다(예전 Remocon 라이브러리의 `RemoconUi.h`와 한 스케치에 함께 넣을 수는 없습니다).
-- **예제의 기본 서버가 `io.iosignal.net`입니다.** 전에는 `io.remocon.kr`이었고 같은 브로커이므로 동작은 같습니다. 보드 설정에 저장한 서버는 그대로 씁니다.
+- **예제의 기본 서버가 `io.iosignal.net`입니다.** 보드 설정에 저장한 서버는 그대로 씁니다.
 - 예제 머리 주석의 "Remocon example"을 "device example"로 바꿨습니다.
 - 장치 가이드는 [장치 만들기 (app.iosignal.net 호환)](https://docs.iosignal.net/docs/arduino/iosignal-device), 공식 타입 설명은 [docs.iosignal.net/docs/devices/types](https://docs.iosignal.net/docs/devices/types)로 옮겼습니다.
 - 같은 시점의 공개 iosignal(npm)은 9.23.0입니다. 통신 API와 프로토콜은 9.23.0과 같습니다.
