@@ -149,6 +149,11 @@ Boho, which handles login and encryption, is in `src/Boho.cpp` and `src/BohoAsco
 
 ## Changes by version
 
+### 10.0.1
+
+- **About 1.5 KB smaller on an Arduino Uno.** AVR builds no longer link printf (log texts and `setLog` are unchanged), and a server redirect connects to its IP directly. `uno-ethernet-button` 30,174 → 28,612 bytes, `uno-ethernet-ir` 30,136 → 28,572 bytes.
+- Both examples now fit Uno-compatible boards that keep a 4 KB boot section (sketches up to about 28 KB). API and behavior are the same as 10.0.0.
+
 ### 10.0.0
 
 - **Login encryption is now standard Ascon (NIST SP 800-232).** Ascon-AEAD128 and Ascon-CXOF128 replace the earlier custom construction (a SHA-256 keystream with XOR). It pairs with the public iosignal 10.0.0 server.
