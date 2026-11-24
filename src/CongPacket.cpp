@@ -59,7 +59,7 @@ void CongPacket::fill_len( uint8_t lenBytes )
 {
     if( client->available() >= lenBytes ){ 
       packetLength.u32 = 0;
-      client->readBytes( packetLength.buf, lenBytes );
+      for (uint8_t i = 0; i < lenBytes; i++) packetLength.buf[i] = (uint8_t)client->read();
       _payloadLength = packetLength.u32;
 
      if( _payloadLength == 0 ){
@@ -87,7 +87,14 @@ void CongPacket::fill_body()
       need = available;  
     }
 
-   size_t readSize = client->readBytes( _buffer + _bufferIndex , need );
+   // Byte by byte with read(): the bytes are already available, and Stream::readBytes (a timed wait) costs
+   // flash on an Uno that this never needs.
+   size_t readSize = 0;
+   while (readSize < need) {
+     const int v = client->read();
+     if (v < 0) break;
+     _buffer[_bufferIndex + readSize++] = (uint8_t)v;
+   }
     _bufferIndex += readSize;
 
   // Serial.printlnv("###  available: %d  read: %d  _bufferIndex: %d", available, readSize,  _bufferIndex );

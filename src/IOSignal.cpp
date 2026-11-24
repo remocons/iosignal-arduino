@@ -8,10 +8,9 @@
 
 IOSignal::IOSignal()
 {
+  // The clock (BohoClock) and cong (CongPacket) are already zeroed by their own constructors.
   state = IO_CLOSED;
-  setTime(0);
   packetLength.u32 = 0;
-  cong = CongPacket();
 }
 
 
@@ -272,15 +271,8 @@ void IOSignal::loop()
       state = IO_REDIRECTING;
       close(MsgType::SERVER_REDIRECT);
   
-      char ipString[16];
-#if defined(__AVR__)
-      snprintf_P(ipString, sizeof(ipString), PSTR("%d.%d.%d.%d"), message[1], message[2], message[3], message[4]);
-#else
-      snprintf(ipString, sizeof(ipString), "%d.%d.%d.%d", message[1], message[2], message[3], message[4]);
-#endif
       uint16_t port = (message[5] << 8 ) + message[6];
-      
-      if( this->client->connect( ipString , port ) ){
+      if( this->client->connect( IPAddress(message[1], message[2], message[3], message[4]), port ) ){
         state = IO_OPEN;
         openedAt = millis();
         lastRxMs = openedAt;
@@ -337,18 +329,42 @@ void IOSignal::loop()
 
 
 // The 128-byte line lives on the stack only while a log callback is set and a line is written.
+// Log lines use only %s (a RAM string) and %u (unsigned int), and %%. A small formatter instead of vsnprintf keeps
+// printf out of AVR builds (about 1 KB of flash on an Uno). The format is in flash on AVR (IOS_TEXT/IOS_HINT).
 void IOSignal::logLine(const char *format, ...)
 {
   if (!logCallback) return;
   char line[128];
+  size_t n = 0;
   va_list args;
   va_start(args, format);
 #if defined(__AVR__)
-  vsnprintf_P(line, sizeof(line), format, args);
+#define IOS_FMT_CHAR(p) ((char)pgm_read_byte(p))
 #else
-  vsnprintf(line, sizeof(line), format, args);
+#define IOS_FMT_CHAR(p) (*(p))
 #endif
+  for (const char *p = format; IOS_FMT_CHAR(p) && n < sizeof(line) - 1; p++) {
+    char c = IOS_FMT_CHAR(p);
+    if (c != '%') { line[n++] = c; continue; }
+    c = IOS_FMT_CHAR(++p);
+    if (c == 's') {
+      const char *s = va_arg(args, const char *);
+      while (s && *s && n < sizeof(line) - 1) line[n++] = *s++;
+    } else if (c == 'u') {
+      unsigned int v = va_arg(args, unsigned int);
+      char digits[10];
+      uint8_t k = 0;
+      do { digits[k++] = '0' + v % 10; v /= 10; } while (v && k < sizeof(digits));
+      while (k && n < sizeof(line) - 1) line[n++] = digits[--k];
+    } else if (c == '%') {
+      line[n++] = '%';
+    } else if (!c) {
+      break;
+    }
+  }
+#undef IOS_FMT_CHAR
   va_end(args);
+  line[n] = 0;
   logCallback(line);
 }
 
