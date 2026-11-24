@@ -18,7 +18,7 @@ IOSignal은 웹브라우저, Node.js, Arduino 간의 실시간 통신을 지원�
 
 ## 설치
 
-1. Arduino IDE 라이브러리 매니저에서 `IOSignal`을 검색해 설치합니다. 의존 라이브러리 **Boho**(1.1.0 이상), **Crypto**, **Bounce2**도 함께 설치합니다.
+1. Arduino IDE 라이브러리 매니저에서 `IOSignal`을 검색해 설치합니다. 의존 라이브러리 **Crypto**, **Bounce2**도 함께 설치합니다. 10.0.0부터 Boho는 이 라이브러리에 들어 있어 따로 설치하지 않습니다.
 2. 라이브러리 매니저에 새 버전이 반영되기 전에는 [공개 저장소](https://github.com/remocons/iosignal-arduino)의 ZIP을 받아 **Sketch > Include Library > Add .ZIP Library**로 추가합니다.
 3. **File > Examples > IOSignal**에서 보드에 맞는 예제를 엽니다. 일부 예제는 라이브러리를 더 설치해야 합니다(아래 [예제](#예제)).
 
@@ -138,18 +138,23 @@ void loop() {
 | [iosignal-cli](https://github.com/remocons/iosignal-cli) · [npm](https://www.npmjs.com/package/iosignal-cli) | 터미널에서 IOSignal 서버·클라이언트를 실행하고 통신을 시험하는 도구 |
 | [iosignal-arduino](https://github.com/remocons/iosignal-arduino) | 현재 저장소. Arduino 장치를 IOSignal 서버에 연결하는 클라이언트 라이브러리 |
 | [boho](https://github.com/remocons/boho) · [npm](https://www.npmjs.com/package/boho) | JavaScript 환경의 공유 키 인증·암호화 라이브러리 |
-| [boho-arduino](https://github.com/remocons/boho-arduino) | Arduino용 Boho 구현. 이 라이브러리의 인증·암호화 의존성 |
+| [boho-arduino](https://github.com/remocons/boho-arduino) | 예전 Arduino용 Boho(SHA-256 방식, 1.1.0). 9.x까지의 의존성이며 10.0.0부터는 쓰지 않습니다 |
 | [remocon-arduino](https://github.com/remocons/remocon-arduino) | 예전 Remocon 예제 라이브러리(9.22.0). 예제는 이 저장소로 옮겨 왔습니다 |
 
 예제 안내와 펌웨어 설치는 [arduino.iosignal.net](https://arduino.iosignal.net/)을, 장치 검색·제어는 [Remocon 웹앱](https://remocon.kr/)을 이용하세요. [보드별 실습 안내](https://docs.iosignal.net/docs/examples/workbench/start)에서 연결 순서를 확인할 수 있습니다.
 
-## Boho 의존성
+## 내장 Boho (10.0.0부터)
 
-IOSignal은 외부 Arduino 라이브러리인 **Boho 1.1.0 이상**을 사용합니다. Boho 소스는 `src/`에 포함되지 않습니다. IOSignal과 함께 Boho 및 Boho의 의존 라이브러리인 Crypto를 설치하세요. 오래된 사본이 사용되지 않도록 Boho는 하나만 설치해 두세요.
-
-새 릴리스가 라이브러리 매니저에 등록되기 전에 로컬에서 개발하려면, 업데이트된 `boho-arduino` 라이브러리를 로컬 폴더 또는 ZIP으로 설치하세요. `depends` 항목은 [Arduino 라이브러리 규격](https://docs.arduino.cc/arduino-cli/library-specification/)을 따릅니다.
+로그인과 암호화를 하는 Boho가 `src/Boho.cpp`, `src/BohoAscon.cpp`에 들어 있습니다. 표준 **Ascon**(NIST SP 800-232)을 쓰며, JavaScript [boho](https://github.com/remocons/boho) 3.x와 같은 형식입니다. 별도 Boho 라이브러리(boho-arduino)는 설치하지 않아도 되고, 스케치에서 `<Boho.h>`로 함께 include하지 마세요(두 라이브러리가 같은 `Boho` 클래스를 정의합니다).
 
 ## 버전별 변경 사항
+
+### 10.0.0
+
+- **인증 암호가 표준 Ascon(NIST SP 800-232)으로 바뀌었습니다.** 예전의 자체 구성(SHA-256 키스트림과 XOR) 대신 Ascon-AEAD128과 Ascon-CXOF128을 씁니다. 공개 iosignal 10.0.0 서버와 짝입니다.
+- **9.x와 접속 호환이 아닙니다.** 9.x 보드는 10.0.0 서버에, 10.0.0 보드는 9.x 서버에 로그인할 수 없습니다. 서버에 등록된 장치 키는 다시 만들어야 합니다(익명 접속은 그대로).
+- **Boho를 라이브러리에 넣었습니다.** 의존성은 Crypto, Bounce2입니다. 스케치의 `IOSignal` API(`auth()`, `signal_e2e()` 등)는 그대로입니다. Boho를 직접 부르는 코드는 `encrypt_488`/`decrypt_488` 대신 `encrypt_session`/`decrypt_session`을 씁니다.
+- Arduino Uno 예제는 플래시 약 1.8KB, RAM 약 245바이트가 줄었고, 로그인 뒤 메시지 암호화가 약 6~7배 빨라졌습니다(16~100바이트 메시지 6.6~12.6ms, 9.x는 43~86ms).
 
 ### 9.23.1
 

@@ -18,7 +18,7 @@ From **9.0.0**, this library uses the same version number as the public [iosigna
 
 ## Installation
 
-1. In the Arduino IDE Library Manager, search for `IOSignal` and install it together with its dependencies **Boho** (1.1.0 or later), **Crypto** and **Bounce2**.
+1. In the Arduino IDE Library Manager, search for `IOSignal` and install it together with its dependencies **Crypto** and **Bounce2**. From 10.0.0, Boho is part of this library and is not installed separately.
 2. Until a new version reaches the Library Manager, download the ZIP from the [public repository](https://github.com/remocons/iosignal-arduino) and add it with **Sketch > Include Library > Add .ZIP Library**.
 3. Open an example for your board from **File > Examples > IOSignal**. Some examples need more libraries (see [Examples](#examples)).
 
@@ -138,18 +138,23 @@ Web apps such as [remocon.kr](https://remocon.kr/) find the device examples and 
 | [iosignal-cli](https://github.com/remocons/iosignal-cli) · [npm](https://www.npmjs.com/package/iosignal-cli) | Command-line tools for running IOSignal servers and clients and testing communication |
 | [iosignal-arduino](https://github.com/remocons/iosignal-arduino) | This repository. Client library that connects Arduino devices to an IOSignal server |
 | [boho](https://github.com/remocons/boho) · [npm](https://www.npmjs.com/package/boho) | Shared-key authentication and encryption library for JavaScript |
-| [boho-arduino](https://github.com/remocons/boho-arduino) | Arduino implementation of Boho, the authentication and encryption dependency of this library |
+| [boho-arduino](https://github.com/remocons/boho-arduino) | The earlier Arduino Boho (SHA-256 method, 1.1.0). A dependency up to 9.x; not used from 10.0.0 |
 | [remocon-arduino](https://github.com/remocons/remocon-arduino) | The former Remocon example library (9.22.0). Its examples moved to this repository |
 
 For example guides and firmware install, use [arduino.iosignal.net](https://arduino.iosignal.net/). For device discovery and control, use the [Remocon web app](https://remocon.kr/). The [board workbench guide](https://docs.iosignal.net/en/docs/examples/workbench/start) shows the connection steps.
 
-## Boho dependency
+## Built-in Boho (from 10.0.0)
 
-IOSignal uses the external Arduino library **Boho 1.1.0 or later**. Boho is not bundled in `src/`. Install Boho and its dependency Crypto together with IOSignal. Keep a single Boho installation so an older copy is not used.
-
-To develop locally before a new release reaches the Library Manager, install the updated `boho-arduino` library from a local folder or ZIP. The `depends` field follows the [Arduino library specification](https://docs.arduino.cc/arduino-cli/library-specification/).
+Boho, which handles login and encryption, is in `src/Boho.cpp` and `src/BohoAscon.cpp`. It uses the standard **Ascon** (NIST SP 800-232) with the same format as the JavaScript [boho](https://github.com/remocons/boho) 3.x. The separate Boho library (boho-arduino) is not needed; do not also include it as `<Boho.h>` in a sketch (both define a `Boho` class).
 
 ## Changes by version
+
+### 10.0.0
+
+- **Login encryption is now standard Ascon (NIST SP 800-232).** Ascon-AEAD128 and Ascon-CXOF128 replace the earlier custom construction (a SHA-256 keystream with XOR). It pairs with the public iosignal 10.0.0 server.
+- **Not compatible with 9.x.** 9.x boards cannot log in to a 10.0.0 server, nor 10.0.0 boards to a 9.x server. Device keys registered on a server must be created again (anonymous connections are unchanged).
+- **Boho is built into the library.** Dependencies are Crypto and Bounce2. The sketch API of `IOSignal` (`auth()`, `signal_e2e()`, ...) is unchanged. Code that calls Boho directly uses `encrypt_session`/`decrypt_session` instead of `encrypt_488`/`decrypt_488`.
+- Arduino Uno examples are about 1.8 KB of flash and 245 bytes of RAM smaller, and message encryption after login is about 6-7 times faster (16-100 byte messages in 6.6-12.6 ms; 9.x took 43-86 ms).
 
 ### 9.23.1
 
