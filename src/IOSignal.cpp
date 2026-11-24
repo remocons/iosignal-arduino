@@ -103,7 +103,7 @@ void IOSignal::loop()
   uint32_t len = cong._payloadLength;
   uint8_t *message = (uint8_t *)cong._buffer;
 
-  if (message[0] == Boho::MsgType::ENC_488)
+  if (message[0] == Boho::MsgType::ENC)
   {
     tmpbuf = (uint8_t *)dynamic_alloc(len);
 
@@ -114,7 +114,7 @@ void IOSignal::loop()
     }
 
     uint32_t decLen = 0;
-    if (decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len, decLen) && decLen)
+    if (decrypt_session(tmpbuf, (uint8_t *)cong._buffer, len, decLen) && decLen)
     {
       message = tmpbuf;
       len = decLen;
@@ -135,11 +135,12 @@ void IOSignal::loop()
     */
 
     // Serial.println(F(">> E2"));
-    if (len < MetaSize_ENC_488) { cong.clear(); return; }
+    if (len < MetaSize_ENC) { cong.clear(); return; }
     memcpy(packetLength.buf, cong._buffer + 1, 4);
     const uint32_t encHeaderSize = packetLength.u32;
-    if (encHeaderSize < 3 || encHeaderSize > len - MetaSize_ENC_488 ||
-        len - MetaSize_ENC_488 - encHeaderSize < MetaSize_ENC_PACK) {
+    // The body (an ENC_PACK) is read by the sketch with decrypt_e2e().
+    if (encHeaderSize < 3 || encHeaderSize > len - MetaSize_ENC ||
+        len - MetaSize_ENC - encHeaderSize < MetaSize_ENC_PACK) {
       cong.clear(); return;
     }
     tmpbuf = (uint8_t *)dynamic_alloc(encHeaderSize);
@@ -151,8 +152,8 @@ void IOSignal::loop()
     }
 
     uint32_t decLen = 0;
-    if (decrypt_488(tmpbuf, (uint8_t *)cong._buffer, len, decLen) &&
-        decLen == encHeaderSize && tmpbuf[0] == IOSignal::MsgType::SIGNAL_E2E &&
+    if (decrypt_session(tmpbuf, (uint8_t *)cong._buffer, len, decLen) &&
+        decLen == encHeaderSize && tmpbuf[0] == MsgType::SIGNAL_E2E &&
         (uint32_t)tmpbuf[1] + 3 == decLen)
     {
       memcpy(cong._buffer + 21, tmpbuf, encHeaderSize);
@@ -171,19 +172,19 @@ void IOSignal::loop()
 
   switch (hd)
   {
-  case IOSignal::MsgType::PING:
+  case MsgType::PING:
   {
     pong();
     break;
   }
 
-  case IOSignal::MsgType::PONG:
+  case MsgType::PONG:
   {
     break;
   }
 
-  case IOSignal::MsgType::SIGNAL_E2E:
-  case IOSignal::MsgType::SIGNAL:
+  case MsgType::SIGNAL_E2E:
+  case MsgType::SIGNAL:
   {
     if (len < 3 || (uint32_t)message[1] > len - 3) break;
     const uint8_t tagLen = message[1];
@@ -199,7 +200,7 @@ void IOSignal::loop()
     break;
   }
 
-  case IOSignal::MsgType::CID_RES:
+  case MsgType::CID_RES:
   {
     if (len > 1 && len - 1 <= MAX_CID_LEN)
     {
@@ -239,7 +240,7 @@ void IOSignal::loop()
     break;
   }
 
-  case IOSignal::MsgType::AUTH_CLEAR:
+  case MsgType::AUTH_CLEAR:
   {
     // e.g. replaced by a duplicate login. Forget the credentials and stay stopped
     // instead of reconnecting anonymously.
@@ -254,7 +255,7 @@ void IOSignal::loop()
     useAuth = false;
     clearAuth(); // Boho::clearAuth()
     if (tmpbuf != NULL) free(tmpbuf);
-    close(IOSignal::MsgType::AUTH_CLEAR);
+    close(MsgType::AUTH_CLEAR);
     this->client->stop();
     state = IO_STOP;
     if (reasonLen) logLine(IOS_TEXT("[IOSignal] AUTH_CLEAR: %s connection stopped."), lastReason);
@@ -265,11 +266,11 @@ void IOSignal::loop()
     return;
   }
 
-  case IOSignal::MsgType::SERVER_REDIRECT:
+  case MsgType::SERVER_REDIRECT:
   {
     if( len == 7){  // 1 MsgType, ip4, port2 
       state = IO_REDIRECTING;
-      close(IOSignal::MsgType::SERVER_REDIRECT);
+      close(MsgType::SERVER_REDIRECT);
   
       char ipString[16];
 #if defined(__AVR__)
@@ -379,7 +380,7 @@ void IOSignal::setRxBuffer(size_t size)
 void IOSignal::sendCidReq()
 {
   uint32_t size = cong._bufferSize;
-  _buffer[0] = IOSignal::MsgType::CID_REQ;
+  _buffer[0] = MsgType::CID_REQ;
   for (uint8_t i = 0; i < 4; i++) _buffer[1 + i] = (uint8_t)(size >> (8 * i));
   send(_buffer, 5);
 }
@@ -407,20 +408,20 @@ void IOSignal::send(const uint8_t *buffer, uint32_t size)
 
 void IOSignal::send_enc_mode(const uint8_t *buf, uint32_t bufSize)
 {
-  if (!buf || !bufSize || bufSize > (uint32_t)((size_t)-1) - MetaSize_ENC_488) return;
+  if (!buf || !bufSize || bufSize > (uint32_t)((size_t)-1) - MetaSize_ENC) return;
   // useEncryption
-  if (encMode == IOSignal::ENC_MODE::YES ||
-      encMode == IOSignal::ENC_MODE::AUTO && isAuthorized)
+  if (encMode == ENC_MODE::YES ||
+      encMode == ENC_MODE::AUTO && isAuthorized)
   {
     if (!isAuthorized) return;
-    uint8_t *enc_buf = (uint8_t *)dynamic_alloc(bufSize + MetaSize_ENC_488);
+    uint8_t *enc_buf = (uint8_t *)dynamic_alloc(bufSize + MetaSize_ENC);
     if (enc_buf == NULL)
       return;
 
-    uint32_t packSize = encrypt_488(enc_buf, buf, bufSize);
+    uint32_t packSize = encrypt_session(enc_buf, buf, bufSize);
     if (packSize) send(enc_buf, packSize);
     free(enc_buf);
-    // ('<<  [ENC_488]')
+    // ('<<  [ENC]')
   }
   else
   {
@@ -431,13 +432,13 @@ void IOSignal::send_enc_mode(const uint8_t *buf, uint32_t bufSize)
 
 void IOSignal::ping()
 {
-  _buffer[0] = IOSignal::MsgType::PING;
+  _buffer[0] = MsgType::PING;
   send(_buffer, 1);
 }
 
 void IOSignal::pong()
 {
-  _buffer[0] = IOSignal::MsgType::PONG;
+  _buffer[0] = MsgType::PONG;
   send(_buffer, 1);
 }
 
@@ -470,12 +471,12 @@ void IOSignal::auth(const char *id_key)
 
 void IOSignal::subscribe(const char *tag)
 {
-  sendTagPacket(IOSignal::MsgType::SUBSCRIBE, tag);
+  sendTagPacket(MsgType::SUBSCRIBE, tag);
 }
 
 void IOSignal::unsubscribe(const char *tag)
 {
-  sendTagPacket(IOSignal::MsgType::UNSUBSCRIBE, tag);
+  sendTagPacket(MsgType::UNSUBSCRIBE, tag);
 }
 
 // [msgType][tagLen][tag]: the SUBSCRIBE and UNSUBSCRIBE packet.
@@ -555,10 +556,10 @@ void IOSignal::signal(const char *tag)
       return;
   }
 
-  buf[0] = IOSignal::MsgType::SIGNAL;
+  buf[0] = MsgType::SIGNAL;
   buf[1] = tagLen;
   memcpy(buf + 2, tag, tagLen); // The following byte stores the payload type.
-  buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::EMPTY;
+  buf[2 + tagLen] = PAYLOAD_TYPE::EMPTY;
   send_enc_mode(buf, 3 + tagLen);
 
   if (!useDefaultBuffer)
@@ -588,10 +589,10 @@ void IOSignal::signal(const char *tag, const char *data)
       return;
   }
 
-  buf[0] = IOSignal::MsgType::SIGNAL;
+  buf[0] = MsgType::SIGNAL;
   buf[1] = tagLen;
   strcpy((char *)buf + 2, tag);
-  buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::TEXT;
+  buf[2 + tagLen] = PAYLOAD_TYPE::TEXT;
   memcpy(buf + 3 + tagLen, data, dataLen);
   send_enc_mode(buf, 3 + tagLen + dataLen);
 
@@ -620,10 +621,10 @@ void IOSignal::signal(const char *tag, const char *data1, const char *data2)
   uint8_t *buf = useDefaultBuffer ? _buffer : (uint8_t *)dynamic_alloc(packetLen);
   if (buf == NULL) return;
 
-  buf[0] = IOSignal::MsgType::SIGNAL;
+  buf[0] = MsgType::SIGNAL;
   buf[1] = tagLen;
   memcpy(buf + 2, tag, tagLen);
-  buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::MJSON;
+  buf[2 + tagLen] = PAYLOAD_TYPE::MJSON;
 
   uint8_t *dest = buf + 3 + tagLen;
   *dest++ = '['; *dest++ = '"';
@@ -659,10 +660,10 @@ void IOSignal::signal(const char *tag, const uint8_t *data, uint32_t dataLen)
       return;
   }
 
-  buf[0] = IOSignal::MsgType::SIGNAL;
+  buf[0] = MsgType::SIGNAL;
   buf[1] = tagLen; //  ch str len
   strcpy((char *)buf + 2, tag);
-  buf[2 + tagLen] = IOSignal::PAYLOAD_TYPE::BINARY;
+  buf[2 + tagLen] = PAYLOAD_TYPE::BINARY;
  
 
   memcpy(buf + 3 + tagLen, data, dataLen);
@@ -694,7 +695,7 @@ void IOSignal::signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen
   const bool encryptLink = encMode == ENC_MODE::YES || (encMode == ENC_MODE::AUTO && isAuthorized);
   if (encryptLink && !isAuthorized) return;
   const size_t headerLen = 3 + tagLen;
-  const size_t dataOffset = headerLen + (encryptLink ? MetaSize_ENC_488 : 0);
+  const size_t dataOffset = headerLen + (encryptLink ? MetaSize_ENC : 0);
   if (dataLen > (uint32_t)((size_t)-1) - dataOffset - MetaSize_ENC_PACK) return;
   uint8_t *buf = (uint8_t *)dynamic_alloc(dataOffset + MetaSize_ENC_PACK + dataLen);
   if (!buf) return;
@@ -704,8 +705,7 @@ void IOSignal::signal_e2e(const char *tag, const uint8_t *data, uint32_t dataLen
   memcpy(header + 2, tag, tagLen);
   header[2 + tagLen] = PAYLOAD_TYPE::BINARY;
   if (encryptLink) {
-    if (encrypt_488(buf, header, headerLen) != dataOffset) { free(buf); return; }
-    buf[0] = Boho::MsgType::ENC_E2E;
+    if (encrypt_session(buf, header, headerLen, Boho::MsgType::ENC_E2E) != dataOffset) { free(buf); return; }
   }
   const uint32_t size = encrypt_e2e(buf + dataOffset, data, dataLen, dataKey);
   if (size) send(buf, dataOffset + size);
@@ -737,7 +737,7 @@ void IOSignal::setLog(void (*logCallback)(const char *))
 
 void IOSignal::close(uint8_t reason)
 {
-  _buffer[0] = IOSignal::MsgType::CLOSE;
+  _buffer[0] = MsgType::CLOSE;
   _buffer[1] = reason;
   send(_buffer, 2);
   this->client->flush();

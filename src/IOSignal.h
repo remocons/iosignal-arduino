@@ -4,7 +4,7 @@
 
 #include <Arduino.h>
 #include <CongPacket.h>
-#include <Boho.h>
+#include "Boho.h" // Boho on Ascon (NIST SP 800-232), part of this library since 10.0.0
 #include "Client.h"
 
 // Log texts stay in flash on AVR (an UNO has 2 KB of RAM); elsewhere they are plain strings.
@@ -169,7 +169,7 @@ public:
   char lastReason[MAX_REASON_LEN + 1] = {0}; // server reason of the last AUTH_CLEAR
   uint32_t lastTxRxTime = 0; // seconds
   uint32_t pingPeriod = 50;  // seconds
-  uint8_t encMode = IOSignal::ENC_MODE::AUTO;
+  uint8_t encMode = ENC_MODE::AUTO;
   uint8_t state;
 
   CongPacket cong;
