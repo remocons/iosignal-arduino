@@ -5,7 +5,7 @@
 Arduino IOSignal 라이브러리는 아두이노를 IOSignal 서버에 연결하는 클라이언트와 보드별 예제를 제공합니다. 채널 통신 예제와 함께, 웹앱이 찾고 제어하는 장치·제어기·카메라 예제(예전 [remocon-arduino](https://github.com/remocons/remocon-arduino)의 예제)도 이 라이브러리에 있습니다.
 
 <p align="center">
-  <img src="docs/assets/iosignal-ecosystem.png" alt="IOSignal로 연결되는 서버, CLI, Node.js, Arduino와 원격 제어 웹앱" width="720" />
+  <img src="docs/assets/iosignal-ecosystem.png" alt="IOSignal로 연결되는 서버, CLI, Node.js, Arduino, Python과 원격 제어 웹앱" width="720" />
 </p>
 
 ## IOSignal

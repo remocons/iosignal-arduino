@@ -5,7 +5,7 @@
 The Arduino IOSignal library provides a client that connects Arduino boards to an IOSignal server, with examples for each board. Besides the channel examples, it holds the device, controller and camera examples that web apps find and control (formerly in [remocon-arduino](https://github.com/remocons/remocon-arduino)).
 
 <p align="center">
-  <img src="docs/assets/iosignal-ecosystem.png" alt="Server, CLI, Node.js, Arduino and remote control web app connected through IOSignal" width="720" />
+  <img src="docs/assets/iosignal-ecosystem.png" alt="Server, CLI, Node.js, Arduino, Python and a remote web app connected through IOSignal" width="720" />
 </p>
 
 ## IOSignal
