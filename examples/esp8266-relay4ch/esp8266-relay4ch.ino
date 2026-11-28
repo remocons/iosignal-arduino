@@ -5,6 +5,8 @@
  *    Relays 1-4 are on GPIO13, 12, 14 and 16. Commands: r1=1 ... r4=0, all=1, all=0.
  *    The names L (built-in LED, GPIO2) and A-D toggle an output; they are for IR
  *    routers that do not know the state.
+ *    A push button between IO5 (GPIO5) and GND toggles all relays: if any relay is on,
+ *    all turn off, otherwise all turn on. It works without the server too.
  *    Its $name is the board setting "name" ("Relay4CH:HOME" by default); Remocon8266-button-controller can control this board.
  *
  *  Setup: connect a USB-TTL adapter to the programming port, hold IO0 to GND while
@@ -14,6 +16,7 @@
  *  IOSignal server and a device key.
  *
  *  [kr] ESP-12F 4채널 릴레이 보드를 relay4 타입으로 제어합니다. 업로드할 때 IO0을 GND에 연결합니다.
+ *       IO5와 GND 사이의 버튼을 누르면 릴레이 전체를 토글합니다(하나라도 켜져 있으면 모두 끔).
  *
  *  Taeo Lee <sixgen@gmail.com>
  *  https://github.com/remocons/iosignal-arduino
@@ -25,6 +28,9 @@
 #include <IOSignal.h>
 #include <IOSignalConfig.h>
 #include <IOSignalUi.h>
+#include <Bounce2.h>
+
+#define BUTTON_PIN 5  // IO5 on the IO header; the other side of the button goes to GND
 
 // Wi-Fi values (and an optional device key) can go in _secrets.h next to this sketch,
 // which keeps them out of version control. Leave the placeholders to use the Wi-Fi set over USB.
@@ -52,6 +58,8 @@ void sendInfo() {
   io.signal("@$ui", "t=relay4.1");
 }
 
+Bounce2::Button aBtn = Bounce2::Button();
+
 char states[] = "10000";
 char last_states[] = "10000";
 uint8_t pinMap[] = { 2, 13, 12, 14, 16};
@@ -78,6 +86,27 @@ void stateChange(int i){
 }
 
 
+// Sets relays 1-4 to '0' or '1' and sends the state once.
+void setAll(char state){
+  for(int i = 1; i <= 4; i++){
+    states[i] = state;
+    if( states[i] != last_states[i] ){
+      digitalWrite( pinMap[i], states[i] - '0' );
+      last_states[i] = states[i];
+    }
+  }
+  Serial.print("states: ");
+  Serial.println( states);
+  publishState();
+}
+
+// The button: any relay on turns all off, otherwise all on (like the all command of a controller).
+void toggleAll(){
+  bool anyOn = false;
+  for(int i = 1; i <= 4; i++) if( states[i] == '1' ) anyOn = true;
+  setAll( anyOn ? '0' : '1' );
+}
+
 void toggle(int i){
   char state = states[i];
    if( state == '1'){
@@ -103,6 +132,10 @@ void setup() {
   pinMode(16, OUTPUT);
   digitalWrite(16, LOW);
 
+  aBtn.attach( BUTTON_PIN, INPUT_PULLUP );
+  aBtn.interval(5); // debounce interval in milliseconds
+  aBtn.setPressedState(LOW);
+
 
   Serial.begin(115200);
   Serial.println();
@@ -125,6 +158,8 @@ void setup() {
 
 
 void loop() {
+    aBtn.update();
+    if( aBtn.pressed() ) toggleAll(); // works offline; the state is sent only while connected
     config.loop(); // USB setup requests, Wi-Fi reconnect
     if ( config.connected() ) io.loop();
 }
@@ -171,10 +206,7 @@ void onMessage( char *tag, uint8_t payloadType, uint8_t* payload, size_t payload
       states[c[1] - '0'] = c[3];
       stateChange(c[1] - '0');
     }else if( strcmp(c, "all=1") == 0 || strcmp(c, "all=0") == 0 ){
-      for(int i = 1; i <= 4; i++){
-        states[i] = c[4];
-        stateChange(i);
-      }
+      setAll(c[4]);
     // The name commands below are for IR routers, which do not know the state.
     }else if( strcmp((char *)payload, "L") == 0){
       toggle(0);

@@ -103,7 +103,7 @@ Parts, wiring, steps, browser firmware install and board settings for each examp
 | Channel send and receive | `esp_channel_txrx`, `uno_ethernet_channel_txrx`, `uno_r4_wifi_channel_txrx` | (UNO Ethernet: Ethernet) |
 | Server features | `esp32c3_duplicate_login` | |
 | iris board (ESP32-C3) | `iris-basic`, `iris-rgb`, `iris-group`, `iris-basic-controller`, `iris-button-controller` | FastLED |
-| Relays and button controllers | `esp8266-relay4ch`, `esp01-relay-button`, `button-controller`, `esp01-button-controller`, `Remocon8266-button-controller` | (Remocon8266: U8g2) |
+| Relays and button controllers | `esp8266-relay4ch`, `esp01-relay-button`, `button-controller`, `esp01-button-controller`, `esp01-worynim-button`, `Remocon8266-button-controller` | (Remocon8266: U8g2) |
 | Single devices | `esp32-cid-led`, `d1-mini-led-button`, `Remocon8266-basic`, `Remocon8266-tv`, `Remocon8266-scanner` | (Remocon8266: U8g2) |
 | Pocket remote (M5Stack Cardputer) | `cardputer-remocon` | M5Cardputer (Partition Scheme: Minimal SPIFFS) |
 | Cameras (ESP32-CAM) | `esp32cam`, `esp32cam-session` | |

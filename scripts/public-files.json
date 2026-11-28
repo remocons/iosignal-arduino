@@ -38,6 +38,8 @@
     "examples/esp01-button-controller/esp01-button-controller.ino",
     "examples/esp01-relay-button/README.md",
     "examples/esp01-relay-button/esp01-relay-button.ino",
+    "examples/esp01-worynim-button/README.md",
+    "examples/esp01-worynim-button/esp01-worynim-button.ino",
     "examples/esp32-cid-led/README.md",
     "examples/esp32-cid-led/esp32-cid-led.ino",
     "examples/esp32-group-led/README.md",

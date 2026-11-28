@@ -37,9 +37,14 @@ const unsigned long SESSION_MS = E2E_SESSION_MS;  // a session's longest life, t
 const unsigned long ROTATE_WAIT_MS = 10000;         // after a rotation, how long the holder has to answer
 const unsigned long REQUEST_GAP_MS = 300;           // at most one challenge request per this time
 const unsigned long HELLO_GAP_MS = 100;             // at most one signed hello per this time (slows key guessing)
+// The holder sends a signed keep every 15 s and a release when its page closes. Without a keep for this long the
+// holder is gone (browser closed, network lost): the session ends and any card may take it.
+const unsigned long HOLDER_SILENT_MS = 40000;
 
 bool sending = true;      // on/off from the app; every boot starts sending
 bool cameraReady = false;
+unsigned long cameraTriedAt = 0;
+const unsigned long CAMERA_RETRY_MS = 10000;  // a camera that did not start is tried again this often
 unsigned long lastShot = 0;
 
 // The session, in RAM only.
@@ -49,7 +54,8 @@ uint8_t nonce[e2esession::NONCE];      // the challenge a hello must sign
 uint8_t prevNonce[e2esession::NONCE];  // the one before, to tell a late hello from a wrong key
 bool havePrevNonce = false;
 uint8_t holder[e2esession::HOLDER] = {0};
-unsigned long sessionStart = 0, rotatedAt = 0, lastRequest = 0, lastHello = 0;
+unsigned long sessionStart = 0, rotatedAt = 0, lastRequest = 0, lastHello = 0, lastKeep = 0;
+uint32_t lastNoticeSeq = 0;
 bool requestSeen = false, helloSeen = false;
 
 void sendInfo() {
@@ -61,9 +67,10 @@ void sendInfo() {
 }
 
 void publishState() {
-  char text[48];
-  snprintf(text, sizeof(text), "on=%c;interval=%ld;session=%c", sending ? '1' : '0', interval.toInt(),
-           sessionActive ? '1' : '0');
+  // cam=0: the camera did not start (it is tried again), so no pictures come even with a session.
+  char text[56];
+  snprintf(text, sizeof(text), "on=%c;interval=%ld;session=%c;cam=%c", sending ? '1' : '0', interval.toInt(),
+           sessionActive ? '1' : '0', cameraReady ? '1' : '0');
   io.signal("@$state", text);
 }
 
@@ -112,6 +119,14 @@ void onHello(const uint8_t* data, size_t size) {
     sendChallenge(e2esession::REQUEST);
     return;
   }
+  if (size == e2esession::NOTICE_SIZE) {  // keep or release from the holder
+    uint32_t seq;
+    if (!sessionActive || !e2esession::noticeValid(sessionKey, holder, lastNoticeSeq, data, &seq)) return;
+    lastNoticeSeq = seq;
+    if (data[1] == e2esession::RELEASE) restartSessions("released by the holder");
+    else lastKeep = millis();
+    return;
+  }
   if (size != e2esession::HELLO_SIZE) return;
   if (helloSeen && millis() - lastHello < HELLO_GAP_MS) return;
   helloSeen = true;
@@ -142,6 +157,8 @@ void onHello(const uint8_t* data, size_t size) {
   e2esession::holderOf(holder, data + 1);
   sessionActive = true;
   sessionStart = millis();
+  lastKeep = millis();
+  lastNoticeSeq = 0;
   rotatedAt = 0;
   io.signal("@e2e-ready", ready, sizeof(ready));
   havePrevNonce = true;
@@ -151,7 +168,9 @@ void onHello(const uint8_t* data, size_t size) {
 }
 
 void sessionLoop() {
-  if (sessionActive && millis() - sessionStart >= SESSION_MS) {
+  if (sessionActive && millis() - lastKeep >= HOLDER_SILENT_MS) {
+    restartSessions("holder silent");  // anyone may take it now
+  } else if (sessionActive && millis() - sessionStart >= SESSION_MS) {
     endSession("expired");
     havePrevNonce = false;
     newNonce();
@@ -265,7 +284,8 @@ void setup() {
 
   newNonce();
   cameraReady = cameraSetup();
-  if (!cameraReady) Serial.println("Camera init failed: no pictures (board settings still work)");
+  cameraTriedAt = millis();
+  if (!cameraReady) Serial.println("Camera init failed: no pictures (board settings still work), trying again");
 
   io.setRxBuffer(200);
   io.setLog([](const char* line) { Serial.println(line); });
@@ -281,6 +301,14 @@ void loop() {
   io.loop();
   if (io.state != IO_READY) return;
   sessionLoop();
+  // After a reset the camera sometimes does not start (it is not powered off): try again, and say so in $state.
+  if (!cameraReady && millis() - cameraTriedAt >= CAMERA_RETRY_MS) {
+    cameraTriedAt = millis();
+    esp_camera_deinit();
+    cameraReady = cameraSetup();
+    Serial.println(cameraReady ? "Camera started" : "Camera init failed again");
+    if (cameraReady) publishState();
+  }
   if (!cameraReady || !sending || !sessionActive) return;
   if (millis() - lastShot >= (unsigned long)interval.toInt()) {
     lastShot = millis();

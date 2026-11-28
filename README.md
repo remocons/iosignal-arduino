@@ -103,7 +103,7 @@ void loop() {
 | 채널 송수신 | `esp_channel_txrx`, `uno_ethernet_channel_txrx`, `uno_r4_wifi_channel_txrx` | (UNO 이더넷: Ethernet) |
 | 서버 기능 | `esp32c3_duplicate_login` | |
 | iris 보드 (ESP32-C3) | `iris-basic`, `iris-rgb`, `iris-group`, `iris-basic-controller`, `iris-button-controller` | FastLED |
-| 릴레이와 버튼 제어기 | `esp8266-relay4ch`, `esp01-relay-button`, `button-controller`, `esp01-button-controller`, `Remocon8266-button-controller` | (Remocon8266: U8g2) |
+| 릴레이와 버튼 제어기 | `esp8266-relay4ch`, `esp01-relay-button`, `button-controller`, `esp01-button-controller`, `esp01-worynim-button`, `Remocon8266-button-controller` | (Remocon8266: U8g2) |
 | 장치 하나 | `esp32-cid-led`, `d1-mini-led-button`, `Remocon8266-basic`, `Remocon8266-tv`, `Remocon8266-scanner` | (Remocon8266: U8g2) |
 | 주머니 리모컨 (M5Stack Cardputer) | `cardputer-remocon` | M5Cardputer (Partition Scheme: Minimal SPIFFS) |
 | 카메라 (ESP32-CAM) | `esp32cam`, `esp32cam-session` | |

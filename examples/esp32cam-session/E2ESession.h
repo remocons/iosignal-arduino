@@ -10,6 +10,9 @@
 //
 // K is the e2e_key text. A and B are public keys of secrets that live only in RAM and are wiped after use, so a
 // recorded exchange and a key read from flash later do not give the session key (forward secrecy).
+//   holder   -> <cam>@e2e-hello      [1][kind][holder 8][seq u32 LE][HMAC(S, label 1 holder seq)]   notice, 46 bytes
+//          kind 'K' keep ("e2e-keep", every 15 s) or 'R' release ("e2e-release", when its page closes);
+//          S is the session key as its 64 hex characters, so only the holder can sign one; seq only rises.
 // holder is the first 8 bytes of SHA-256(A) of the receiver that has the session, zeros when nobody has it.
 // For REFUSED and BUSY it is that of the hello being answered instead, so only its sender takes it.
 #pragma once
@@ -26,6 +29,8 @@ const size_t REQUEST_SIZE = 1;
 const size_t HELLO_SIZE = 1 + PUB + MAC;               // 65
 const size_t CHALLENGE_SIZE = 2 + NONCE + HOLDER;      // 26
 const size_t READY_SIZE = 1 + PUB + MAC;               // 65
+const size_t NOTICE_SIZE = 2 + HOLDER + 4 + MAC;       // 46
+const uint8_t KEEP = 'K', RELEASE = 'R';
 
 enum Reason : uint8_t {
   START = 0,    // nobody has the session (boot, new key, nobody answered a rotation)
@@ -65,6 +70,30 @@ inline bool helloValid(const char* key, const uint8_t nonce[NONCE], const uint8_
   mac(expected, key, "e2e-hello", nonce, hello + 1, nullptr);
   const bool ok = hello[0] == VERSION && same(expected, hello + 1 + PUB, MAC);
   wipe(expected, sizeof(expected));
+  return ok;
+}
+
+// A keep or release notice signed with the session key by the holder, with a seq above lastSeq. Writes its seq.
+inline bool noticeValid(const char* sessionKey, const uint8_t holder[HOLDER], uint32_t lastSeq,
+                        const uint8_t notice[NOTICE_SIZE], uint32_t* seq) {
+  if (notice[0] != VERSION || (notice[1] != KEEP && notice[1] != RELEASE) || !sessionKey[0]) return false;
+  if (!same(notice + 2, holder, HOLDER)) return false;
+  const uint8_t* s = notice + 2 + HOLDER;
+  const uint32_t n = (uint32_t)s[0] | (uint32_t)s[1] << 8 | (uint32_t)s[2] << 16 | (uint32_t)s[3] << 24;
+  if (n <= lastSeq) return false;
+  const char* label = notice[1] == RELEASE ? "e2e-release" : "e2e-keep";
+  SHA256 h;
+  uint8_t expected[MAC];
+  const size_t keyLen = strlen(sessionKey);
+  h.resetHMAC(sessionKey, keyLen);
+  h.update(label, strlen(label));
+  h.update(&VERSION, 1);
+  h.update(holder, HOLDER);
+  h.update(s, 4);
+  h.finalizeHMAC(sessionKey, keyLen, expected, MAC);
+  const bool ok = same(expected, s + 4, MAC);
+  wipe(expected, sizeof(expected));
+  if (ok) *seq = n;
   return ok;
 }
 
