@@ -149,6 +149,15 @@ Boho, which handles login and encryption, is in `src/Boho.cpp` and `src/BohoAsco
 
 ## Changes by version
 
+### 10.0.2
+
+- The library code is the same as 10.0.1; only examples changed.
+- **`esp01-button-controller` uses one button on GPIO2.** Serial (TX, RX) stays on, so the board settings page answers at any time without a setup mode. The LED is no longer used.
+- **New example `esp01-worynim-button`:** one GPIO3 button (SW IO3) on a USB-C ESP-01 carrier board controls another device. No other pin is used.
+- `esp01-relay-button` announces the 1-channel relay type `relay1.1` (r1), toggles with a GPIO2 button and keeps serial on.
+- `esp8266-relay4ch`: the IO5 button toggles all relays.
+- `esp32cam-session`: `cam=0/1` in `$state`, the camera is retried every 10 s when it did not start, keep (15 s) and release notices for the session holder, and a silent holder loses the session after 40 s.
+
 ### 10.0.1
 
 - **About 1.5 KB smaller on an Arduino Uno.** AVR builds no longer link printf (log texts and `setLog` are unchanged), and a server redirect connects to its IP directly. `uno-ethernet-button` 30,174 → 28,612 bytes, `uno-ethernet-ir` 30,136 → 28,572 bytes.
